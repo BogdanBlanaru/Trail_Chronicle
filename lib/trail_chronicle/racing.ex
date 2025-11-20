@@ -95,9 +95,6 @@ defmodule TrailChronicle.Racing do
     }
   end
 
-  @doc """
-  Gets year-to-date summary.
-  """
   def get_ytd_stats(%Athlete{id: athlete_id}, year) do
     start_of_year = Date.new!(year, 1, 1)
     end_of_year = Date.new!(year, 12, 31)
@@ -115,9 +112,6 @@ defmodule TrailChronicle.Racing do
     |> Repo.one()
   end
 
-  @doc """
-  Returns a list of years that have race data for the athlete.
-  """
   def list_race_years(%Athlete{id: athlete_id}) do
     query =
       from r in Race,
@@ -236,20 +230,106 @@ defmodule TrailChronicle.Racing do
     |> Repo.all()
   end
 
+  @doc """
+  Parses a GPX file, extracts the track, calculates stats, and updates the race.
+  """
   def update_race_gpx(race, gpx_file_path) do
     case File.read(gpx_file_path) do
       {:ok, xml_content} ->
+        # 1. Extract Points with Elevation
         points =
           xml_content
-          |> xpath(~x"//trkpt"l, lat: ~x"./@lat"s, lon: ~x"./@lon"s)
-          |> Enum.map(fn %{lat: lat, lon: lon} ->
-            [String.to_float(lat), String.to_float(lon)]
+          |> xpath(
+            ~x"//trkpt"l,
+            lat: ~x"./@lat"s,
+            lon: ~x"./@lon"s,
+            ele: ~x"./ele/text()"s
+          )
+          |> Enum.map(fn %{lat: lat, lon: lon, ele: ele} ->
+            %{
+              lat: String.to_float(lat),
+              lon: String.to_float(lon),
+              ele: parse_float(ele)
+            }
           end)
 
-        update_race(race, %{route_data: points, has_gpx: true})
+        if length(points) > 0 do
+          # 2. Calculate Stats
+          {total_dist, total_gain, total_loss} = calculate_track_stats(points)
+
+          # 3. Format: Wrap in a Map because Ecto :map requires %{}
+          # Leaflet expects [[lat, lon], ...] so we store it under a key "coordinates"
+          route_wrapper = %{
+            "coordinates" => Enum.map(points, fn p -> [p.lat, p.lon] end)
+          }
+
+          # 4. Update Race with new data
+          update_race(race, %{
+            # Pass the map, not the list
+            route_data: route_wrapper,
+            has_gpx: true,
+            distance_km: Float.round(total_dist / 1000, 2),
+            elevation_gain_m: round(total_gain),
+            elevation_loss_m: round(total_loss)
+          })
+        else
+          {:error, :no_track_points}
+        end
 
       _ ->
         {:error, :invalid_file}
     end
+  end
+
+  # --- GPS Math Helpers ---
+
+  defp parse_float(""), do: 0.0
+  defp parse_float(nil), do: 0.0
+
+  defp parse_float(str) do
+    String.to_float(str)
+  rescue
+    _ -> 0.0
+  end
+
+  defp calculate_track_stats(points) do
+    # Reduce list to calculate running totals
+    {_, dist, gain, loss} =
+      Enum.reduce(points, {nil, 0.0, 0.0, 0.0}, fn point, {prev, d, g, l} ->
+        if prev do
+          # Distance (Haversine formula simplified)
+          new_dist = distance_between(prev, point)
+
+          # Elevation
+          ele_diff = point.ele - prev.ele
+          new_gain = if ele_diff > 0, do: g + ele_diff, else: g
+          new_loss = if ele_diff < 0, do: l + abs(ele_diff), else: l
+
+          {point, d + new_dist, new_gain, new_loss}
+        else
+          {point, 0.0, 0.0, 0.0}
+        end
+      end)
+
+    {dist, gain, loss}
+  end
+
+  # Calculate distance in meters between two coords
+  defp distance_between(p1, p2) do
+    rad = :math.pi() / 180
+    # Earth radius in meters
+    r = 6_371_000
+
+    d_lat = (p2.lat - p1.lat) * rad
+    d_lon = (p2.lon - p1.lon) * rad
+    lat1 = p1.lat * rad
+    lat2 = p2.lat * rad
+
+    a =
+      :math.sin(d_lat / 2) * :math.sin(d_lat / 2) +
+        :math.sin(d_lon / 2) * :math.sin(d_lon / 2) * :math.cos(lat1) * :math.cos(lat2)
+
+    c = 2 * :math.atan2(:math.sqrt(a), :math.sqrt(1 - a))
+    r * c
   end
 end

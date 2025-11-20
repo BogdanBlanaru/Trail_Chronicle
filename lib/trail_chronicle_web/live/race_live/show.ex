@@ -53,21 +53,26 @@ defmodule TrailChronicleWeb.RaceLive.Show do
   def handle_event("save_gpx", _params, socket) do
     race = socket.assigns.race
 
-    consume_uploaded_entries(socket, :gpx, fn %{path: path}, _entry ->
-      case Racing.update_race_gpx(race, path) do
-        {:ok, updated_race} -> {:ok, updated_race}
-        _ -> {:error, "Failed to parse"}
-      end
-    end)
-    |> case do
-      [updated_race] ->
+    # Consume the uploaded file
+    results =
+      consume_uploaded_entries(socket, :gpx, fn %{path: path}, _entry ->
+        case Racing.update_race_gpx(race, path) do
+          {:ok, updated_race} -> {:ok, updated_race}
+          {:error, reason} -> {:error, reason}
+        end
+      end)
+
+    case List.first(results) do
+      %TrailChronicle.Racing.Race{} = updated_race ->
+        # PUSH EVENT to JS hook
         {:noreply,
          socket
-         |> put_flash(:info, gettext("Route added successfully!"))
-         |> assign(:race, updated_race)}
+         |> put_flash(:info, gettext("Route analyzed! Distance and Elevation updated."))
+         |> assign(:race, updated_race)
+         |> push_event("init_map", %{route: updated_race.route_data})}
 
       _ ->
-        {:noreply, socket |> put_flash(:error, gettext("Could not process GPX file."))}
+        {:noreply, socket |> put_flash(:error, gettext("Failed to process GPX file."))}
     end
   end
 

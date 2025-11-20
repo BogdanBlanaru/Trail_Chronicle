@@ -26,22 +26,30 @@ let Hooks = {}
 
 Hooks.RaceMap = {
   mounted() {
-    // 1. Get Data from HTML attribute
-    const routeData = JSON.parse(this.el.dataset.route);
+    this.initMap();
+  },
+  updated() {
+    this.initMap();
+  },
+  initMap() {
+    if (!this.el.dataset.route) return;
     
-    if (routeData && routeData.length > 0) {
-      // 2. Initialize Map
-      this.map = L.map(this.el.id).setView(routeData[0], 13);
+    const data = JSON.parse(this.el.dataset.route);
+    // FIX: Access the "coordinates" key we created in Elixir
+    const routePoints = data.coordinates; 
+    
+    if (routePoints && routePoints.length > 0) {
+      if (this.map) {
+        this.map.remove();
+      }
 
-      // 3. Add Tile Layer (OpenStreetMap)
+      this.map = L.map(this.el.id).setView(routePoints[0], 13);
+
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
       }).addTo(this.map);
 
-      // 4. Draw Polyline
-      const polyline = L.polyline(routeData, {color: '#2563eb', weight: 4}).addTo(this.map);
-      
-      // 5. Zoom map to fit the route
+      const polyline = L.polyline(routePoints, {color: '#2563eb', weight: 4}).addTo(this.map);
       this.map.fitBounds(polyline.getBounds());
     }
   }

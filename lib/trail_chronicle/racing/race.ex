@@ -64,8 +64,7 @@ defmodule TrailChronicle.Racing.Race do
     field :registration_deadline, :date
     field :is_registered, :boolean, default: false
 
-    # Maps to JSONB
-    field :route_data, {:array, :map}
+    field :route_data, :map
     has_many :photos, TrailChronicle.Racing.RacePhoto
 
     timestamps(type: :utc_datetime)
