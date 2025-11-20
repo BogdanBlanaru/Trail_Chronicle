@@ -14,13 +14,13 @@
             d="M15 19l-7-7 7-7"
           />
         </svg>
-        Back to Races
+        {gettext("Back to Races")}
       </.link>
       <h1 class="text-3xl font-bold text-gray-900 mt-2">{@page_title}</h1>
       <p class="mt-2 text-sm text-gray-600">
         {if @live_action == :new,
-          do: "Add a new race to your collection",
-          else: "Update race details"}
+          do: gettext("Add a new race to your collection"),
+          else: gettext("Update race details")}
       </p>
     </div>
     
@@ -39,14 +39,13 @@
             <span class="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center mr-3">
               1
             </span>
-            Basic Information
+            {gettext("Basic Information")}
           </h2>
-
           <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <!-- Race Name -->
             <div class="sm:col-span-2">
               <label for="race_name" class="block text-sm font-medium text-gray-700 mb-2">
-                Race Name <span class="text-red-500">*</span>
+                {gettext("Race Name")} <span class="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -62,7 +61,7 @@
 <!-- Race Date -->
             <div>
               <label for="race_date" class="block text-sm font-medium text-gray-700 mb-2">
-                Race Date <span class="text-red-500">*</span>
+                {gettext("Race Date")} <span class="text-red-500">*</span>
               </label>
               <input
                 type="date"
@@ -77,14 +76,14 @@
 <!-- Race Type -->
             <div>
               <label for="race_type" class="block text-sm font-medium text-gray-700 mb-2">
-                Race Type
+                {gettext("Race Type")}
               </label>
               <select
                 name={f[:race_type].name}
                 id="race_type"
                 class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               >
-                <option value="">Select type...</option>
+                <option value="">{gettext("Select type...")}</option>
                 <%= for type <- Race.race_types() do %>
                   <option value={type} selected={f[:race_type].value == type}>
                     {String.replace(type, "_", " ") |> String.capitalize()}
@@ -96,7 +95,7 @@
 <!-- Status -->
             <div>
               <label for="race_status" class="block text-sm font-medium text-gray-700 mb-2">
-                Status <span class="text-red-500">*</span>
+                {gettext("Status")} <span class="text-red-500">*</span>
               </label>
               <select
                 name={f[:status].name}
@@ -120,14 +119,13 @@
             <span class="bg-green-100 text-green-600 rounded-full w-8 h-8 flex items-center justify-center mr-3">
               2
             </span>
-            Location & Distance
+            {gettext("Location & Distance")}
           </h2>
-
           <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <!-- Country -->
             <div>
               <label for="race_country" class="block text-sm font-medium text-gray-700 mb-2">
-                Country
+                {gettext("Country")}
               </label>
               <input
                 type="text"
@@ -142,7 +140,7 @@
 <!-- City -->
             <div>
               <label for="race_city" class="block text-sm font-medium text-gray-700 mb-2">
-                City
+                {gettext("City")}
               </label>
               <input
                 type="text"
@@ -157,7 +155,7 @@
 <!-- Latitude -->
             <div>
               <label for="race_latitude" class="block text-sm font-medium text-gray-700 mb-2">
-                Latitude
+                {gettext("Latitude")}
               </label>
               <input
                 type="number"
@@ -173,7 +171,7 @@
 <!-- Longitude -->
             <div>
               <label for="race_longitude" class="block text-sm font-medium text-gray-700 mb-2">
-                Longitude
+                {gettext("Longitude")}
               </label>
               <input
                 type="number"
@@ -189,7 +187,7 @@
 <!-- Distance -->
             <div>
               <label for="race_distance" class="block text-sm font-medium text-gray-700 mb-2">
-                Distance (km)
+                {gettext("Distance (km)")}
               </label>
               <input
                 type="number"
@@ -208,7 +206,7 @@
                 for="race_elevation_gain"
                 class="block text-sm font-medium text-gray-700 mb-2"
               >
-                Elevation Gain (m)
+                {gettext("Elevation Gain (m)")}
               </label>
               <input
                 type="number"
@@ -226,7 +224,7 @@
                 for="race_elevation_loss"
                 class="block text-sm font-medium text-gray-700 mb-2"
               >
-                Elevation Loss (m)
+                {gettext("Elevation Loss (m)")}
               </label>
               <input
                 type="number"
@@ -244,14 +242,14 @@
                 for="race_terrain_difficulty"
                 class="block text-sm font-medium text-gray-700 mb-2"
               >
-                Terrain Difficulty (1-5)
+                {gettext("Terrain Difficulty")} (1-5)
               </label>
               <select
                 name={f[:terrain_difficulty].name}
                 id="race_terrain_difficulty"
                 class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               >
-                <option value="">Not specified</option>
+                <option value="">{gettext("Not specified")}</option>
                 <%= for difficulty <- 1..5 do %>
                   <option value={difficulty} selected={f[:terrain_difficulty].value == difficulty}>
                     {difficulty} {String.duplicate("⭐", difficulty)}
@@ -261,21 +259,19 @@
             </div>
           </div>
         </div>
-        
-<!-- Performance Section -->
+        <!-- Performance Section -->
         <div class="border-t border-gray-200 pt-8">
           <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
             <span class="bg-purple-100 text-purple-600 rounded-full w-8 h-8 flex items-center justify-center mr-3">
               3
             </span>
-            Performance & Conditions
+            {gettext("Performance & Conditions")}
           </h2>
-
           <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <!-- Finish Time (seconds) -->
+            <!-- Finish Time -->
             <div>
               <label for="race_finish_time" class="block text-sm font-medium text-gray-700 mb-2">
-                Finish Time (seconds)
+                {gettext("Finish Time")} ({gettext("seconds")})
               </label>
               <input
                 type="number"
@@ -286,7 +282,7 @@
                 placeholder="e.g., 28800 (8 hours)"
               />
               <p class="mt-1 text-xs text-gray-500">
-                Enter time in seconds (e.g., 3600 = 1 hour)
+                {gettext("Enter time in seconds (e.g., 3600 = 1 hour)")}
               </p>
             </div>
             
@@ -296,7 +292,7 @@
                 for="race_overall_position"
                 class="block text-sm font-medium text-gray-700 mb-2"
               >
-                Overall Position
+                {gettext("Overall Position")}
               </label>
               <input
                 type="number"
@@ -314,7 +310,7 @@
                 for="race_category_position"
                 class="block text-sm font-medium text-gray-700 mb-2"
               >
-                Category Position
+                {gettext("Category Position")}
               </label>
               <input
                 type="number"
@@ -332,7 +328,7 @@
                 for="race_total_participants"
                 class="block text-sm font-medium text-gray-700 mb-2"
               >
-                Total Participants
+                {gettext("Total Participants")}
               </label>
               <input
                 type="number"
@@ -347,7 +343,7 @@
 <!-- Weather -->
             <div>
               <label for="race_weather" class="block text-sm font-medium text-gray-700 mb-2">
-                Weather Conditions
+                {gettext("Weather Conditions")}
               </label>
               <input
                 type="text"
@@ -362,7 +358,7 @@
 <!-- Temperature -->
             <div>
               <label for="race_temperature" class="block text-sm font-medium text-gray-700 mb-2">
-                Temperature (°C)
+                {gettext("Temperature (°C)")}
               </label>
               <input
                 type="number"
@@ -377,14 +373,14 @@
 <!-- Surface Type -->
             <div>
               <label for="race_surface_type" class="block text-sm font-medium text-gray-700 mb-2">
-                Surface Type
+                {gettext("Surface Type")}
               </label>
               <select
                 name={f[:surface_type].name}
                 id="race_surface_type"
                 class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               >
-                <option value="">Select surface...</option>
+                <option value="">{gettext("Select surface...")}</option>
                 <%= for surface <- Race.surface_types() do %>
                   <option value={surface} selected={f[:surface_type].value == surface}>
                     {String.capitalize(surface)}
@@ -401,66 +397,67 @@
             <span class="bg-yellow-100 text-yellow-600 rounded-full w-8 h-8 flex items-center justify-center mr-3">
               4
             </span>
-            Your Story
+            {gettext("Your Story")}
           </h2>
-
           <div class="space-y-6">
             <!-- Race Report -->
             <div>
               <label for="race_report" class="block text-sm font-medium text-gray-700 mb-2">
-                Race Report
+                {gettext("Race Report")}
               </label>
               <textarea
                 name={f[:race_report].name}
                 id="race_report"
                 rows="6"
                 class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                placeholder="Tell your story... How was the race? What did you experience?"
+                placeholder={
+                  gettext("Tell your story... How was the race? What did you experience?")
+                }
               ><%= f[:race_report].value %></textarea>
               <p class="mt-1 text-xs text-gray-500">
-                Share your experience, emotions, and journey
+                {gettext("Share your experience, emotions, and journey")}
               </p>
             </div>
             
 <!-- Highlights -->
             <div>
               <label for="race_highlights" class="block text-sm font-medium text-gray-700 mb-2">
-                Highlights ✨
+                {gettext("Highlights")} ✨
               </label>
               <textarea
                 name={f[:highlights].name}
                 id="race_highlights"
                 rows="3"
                 class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                placeholder="Best moments, favorite sections, memorable views..."
+                placeholder={gettext("Best moments, favorite sections, memorable views...")}
               ><%= f[:highlights].value %></textarea>
             </div>
             
 <!-- Difficulties -->
             <div>
               <label for="race_difficulties" class="block text-sm font-medium text-gray-700 mb-2">
-                Challenges ⚠️
+                {gettext("Difficulties")} ⚠️
               </label>
               <textarea
                 name={f[:difficulties].name}
                 id="race_difficulties"
                 rows="3"
                 class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                placeholder="Tough sections, problems encountered, lessons learned..."
+                placeholder={gettext("Tough sections, problems encountered, lessons learned...")}
               ><%= f[:difficulties].value %></textarea>
             </div>
             
 <!-- Gear Used -->
             <div>
               <label for="race_gear" class="block text-sm font-medium text-gray-700 mb-2">
-                Gear Used 🎒
+                {gettext("Gear Used")} 🎒
               </label>
               <textarea
                 name={f[:gear_used].name}
                 id="race_gear"
                 rows="2"
                 class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                placeholder="Shoes, poles, vest, nutrition..."
+                placeholder={gettext("Shoes, poles, vest, nutrition...")}
               ><%= f[:gear_used].value %></textarea>
             </div>
           </div>
@@ -472,14 +469,13 @@
             <span class="bg-red-100 text-red-600 rounded-full w-8 h-8 flex items-center justify-center mr-3">
               5
             </span>
-            Registration & Links
+            {gettext("Registration & Links")}
           </h2>
-
           <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <!-- Official Website -->
             <div class="sm:col-span-2">
               <label for="race_website" class="block text-sm font-medium text-gray-700 mb-2">
-                Official Website
+                {gettext("Official Website")}
               </label>
               <input
                 type="url"
@@ -497,7 +493,7 @@
                 for="race_registration_url"
                 class="block text-sm font-medium text-gray-700 mb-2"
               >
-                Registration URL
+                {gettext("Registration URL")}
               </label>
               <input
                 type="url"
@@ -512,7 +508,7 @@
 <!-- Cost -->
             <div>
               <label for="race_cost" class="block text-sm font-medium text-gray-700 mb-2">
-                Cost (EUR)
+                {gettext("Cost (EUR)")}
               </label>
               <input
                 type="number"
@@ -531,7 +527,7 @@
                 for="race_registration_deadline"
                 class="block text-sm font-medium text-gray-700 mb-2"
               >
-                Registration Deadline
+                {gettext("Registration Deadline")}
               </label>
               <input
                 type="date"
@@ -552,7 +548,9 @@
                   checked={f[:is_registered].value}
                   class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 />
-                <span class="ml-2 text-sm text-gray-700">I am registered for this race</span>
+                <span class="ml-2 text-sm text-gray-700">
+                  {gettext("I am registered for this race")}
+                </span>
               </label>
             </div>
           </div>
@@ -564,13 +562,13 @@
             navigate={~p"/races"}
             class="px-6 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
           >
-            Cancel
+            {gettext("Cancel")}
           </.link>
           <button
             type="submit"
             class="px-6 py-3 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm"
           >
-            {if @live_action == :new, do: "Create Race", else: "Update Race"}
+            {if @live_action == :new, do: gettext("Create Race"), else: gettext("Update Race")}
           </button>
         </div>
       </.form>

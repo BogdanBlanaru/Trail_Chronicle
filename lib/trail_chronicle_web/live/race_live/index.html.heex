@@ -2,13 +2,16 @@
   <!-- Header -->
   <div class="sm:flex sm:items-center sm:justify-between mb-8">
     <div>
-      <h1 class="text-3xl font-bold text-gray-900">All Races 🏃‍♂️</h1>
-
-      <p class="mt-2 text-sm text-gray-700">A complete history of your running adventures</p>
+      <h1 class="text-3xl font-bold text-gray-900">{gettext("All Races")} 🏃‍♂️</h1>
+      <p class="mt-2 text-sm text-gray-700">
+        {gettext("A complete history of your running adventures")}
+      </p>
     </div>
-
     <div class="mt-4 sm:mt-0">
-      <%= live_redirect to: ~p"/races/new", class: "inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700" do %>
+      <.link
+        navigate={~p"/races/new"}
+        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+      >
         <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
@@ -17,35 +20,37 @@
             d="M12 4v16m8-8H4"
           />
         </svg>
-        Add New Race
-      <% end %>
+        {gettext("Add New Race")}
+      </.link>
     </div>
   </div>
-  <!-- Filters -->
+  
+<!-- Filters -->
   <div class="mb-6 flex gap-2">
     <button
       phx-click="filter"
       phx-value-filter="all"
       class={"px-4 py-2 rounded-lg font-medium transition-colors " <> if @filter == "all", do: "bg-blue-600 text-white", else: "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"}
     >
-      All ({length(@races)})
+      {gettext("All")} ({length(@races)})
     </button>
     <button
       phx-click="filter"
       phx-value-filter="completed"
       class={"px-4 py-2 rounded-lg font-medium transition-colors " <> if @filter == "completed", do: "bg-green-600 text-white", else: "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"}
     >
-      Completed
+      {gettext("Completed")}
     </button>
     <button
       phx-click="filter"
       phx-value-filter="upcoming"
       class={"px-4 py-2 rounded-lg font-medium transition-colors " <> if @filter == "upcoming", do: "bg-yellow-600 text-white", else: "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"}
     >
-      Upcoming
+      {gettext("Upcoming")}
     </button>
   </div>
-  <!-- Race Grid -->
+  
+<!-- Race Grid -->
   <%= if Enum.empty?(@races) do %>
     <div class="text-center py-12">
       <svg
@@ -61,20 +66,21 @@
           d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
         />
       </svg>
-      <h3 class="mt-2 text-sm font-medium text-gray-900">No races found</h3>
-
-      <p class="mt-1 text-sm text-gray-500">Get started by creating a new race.</p>
-
+      <h3 class="mt-2 text-sm font-medium text-gray-900">{gettext("No races found")}</h3>
+      <p class="mt-1 text-sm text-gray-500">{gettext("Get started by creating a new race.")}</p>
       <div class="mt-6">
-        <%= live_redirect to: ~p"/races/new", class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" do %>
-          Add New Race
-        <% end %>
+        <.link
+          navigate={~p"/races/new"}
+          class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+        >
+          {gettext("Add New Race")}
+        </.link>
       </div>
     </div>
   <% else %>
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       <%= for race <- @races do %>
-        <%= live_redirect to: ~p"/races/#{race.id}", class: "block group" do %>
+        <.link navigate={~p"/races/#{race.id}"} class="block group">
           <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-200 transform group-hover:-translate-y-1">
             <!-- Status Badge -->
             <div class="relative">
@@ -89,45 +95,41 @@
                   <span class="text-6xl">{if race.race_type == "trail", do: "🏔️", else: "🏃"}</span>
                 <% end %>
               </div>
-
               <div class="absolute top-4 right-4">
                 <%= if race.status == "completed" do %>
                   <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    ✓ Completed
+                    ✓ {gettext("Completed")}
                   </span>
                 <% else %>
                   <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                    Upcoming
+                    {gettext("Upcoming")}
                   </span>
                 <% end %>
               </div>
             </div>
-            <!-- Content -->
+            
+<!-- Content -->
             <div class="p-6">
               <h3 class="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
                 {race.name}
               </h3>
-
               <div class="space-y-2 text-sm text-gray-600 mb-4">
                 <div class="flex items-center">
                   <span class="mr-2">📍</span> <span>{race.city}, {race.country}</span>
                 </div>
-
                 <div class="flex items-center">
                   <span class="mr-2">📆</span>
                   <span>{Calendar.strftime(race.race_date, "%B %d, %Y")}</span>
                 </div>
-
                 <div class="flex items-center">
-                  <span class="mr-2">🏃</span> <span>{race.distance_km} km</span>
+                  <span class="mr-2">🏃</span> <span>{race.distance_km} {gettext("km")}</span>
                 </div>
-
                 <%= if race.elevation_gain_m do %>
                   <div class="flex items-center">
-                    <span class="mr-2">⛰️</span> <span>{race.elevation_gain_m} m elevation</span>
+                    <span class="mr-2">⛰️</span>
+                    <span>{race.elevation_gain_m} {gettext("m")} {gettext("elevation")}</span>
                   </div>
                 <% end %>
-
                 <%= if race.finish_time_seconds do %>
                   <div class="flex items-center">
                     <span class="mr-2">⏱️</span>
@@ -135,13 +137,12 @@
                   </div>
                 <% end %>
               </div>
-
               <%= if race.race_report do %>
                 <p class="text-sm text-gray-700 line-clamp-2 italic">"{race.race_report}"</p>
               <% end %>
             </div>
           </div>
-        <% end %>
+        </.link>
       <% end %>
     </div>
   <% end %>
