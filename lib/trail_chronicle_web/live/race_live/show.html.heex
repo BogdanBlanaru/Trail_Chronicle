@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-slate-50">
+<div class="min-h-screen bg-slate-50" phx-window-keydown="keydown">
   <div class="relative h-[60vh] min-h-[500px] w-full bg-slate-900 overflow-hidden">
     <%= if @race.cover_photo_url do %>
       <img
@@ -219,12 +219,28 @@
             <% else %>
               <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <%= for photo <- @photos do %>
-                  <div class="relative aspect-square rounded-xl overflow-hidden group cursor-pointer">
+                  <div
+                    class="relative aspect-square rounded-xl overflow-hidden group cursor-pointer"
+                    phx-click="open_lightbox"
+                    phx-value-id={photo.id}
+                  >
                     <img
-                      src={photo.image_path}
+                      src={"#{photo.image_path}?v=#{DateTime.to_unix(photo.updated_at)}"}
                       class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                     <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors">
+                    </div>
+                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span class="text-white bg-black/50 rounded-full p-2 backdrop-blur-sm">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m4-3H6"
+                          />
+                        </svg>
+                      </span>
                     </div>
                   </div>
                 <% end %>
@@ -237,7 +253,6 @@
           <h3 class="font-bold text-2xl text-slate-900 mb-6 flex items-center gap-2">
             <span>📝</span> {gettext("Race Report")}
           </h3>
-
           <%= if @race.race_report do %>
             <div class="prose prose-lg prose-slate max-w-none text-slate-600 leading-relaxed">
               <p class="whitespace-pre-line">{@race.race_report}</p>
@@ -294,71 +309,73 @@
                 <div class="bg-blue-500 h-2 rounded-full" style="width: 60%"></div>
               </div>
             </div>
-            <div class="grid grid-cols-2 gap-4 pt-2">
-              <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <p class="text-xs text-slate-400 font-bold uppercase">{gettext("Overall")}</p>
-                <p class="text-xl font-bold text-slate-900 mt-1">
-                  {if @race.overall_position, do: "##{@race.overall_position}", else: "-"}
-                </p>
-                <p class="text-xs text-slate-400 mt-1">
-                  {if @race.total_participants, do: "of #{@race.total_participants}", else: ""}
-                </p>
-              </div>
-              <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <p class="text-xs text-slate-400 font-bold uppercase">{gettext("Category")}</p>
-                <p class="text-xl font-bold text-slate-900 mt-1">
-                  {if @race.category_position, do: "##{@race.category_position}", else: "-"}
-                </p>
-              </div>
-            </div>
           </div>
         </div>
-
-        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
-          <h3 class="font-bold text-lg text-slate-900 mb-6">{gettext("Conditions")}</h3>
-          <div class="space-y-4">
-            <div class="flex items-center justify-between pb-4 border-b border-slate-50">
-              <span class="text-slate-500 text-sm">{gettext("Difficulty")}</span>
-              <div class="flex gap-0.5">
-                <%= if @race.terrain_difficulty do %>
-                  <%= for _ <- 1..@race.terrain_difficulty do %>
-                    <span class="w-2 h-4 bg-amber-400 rounded-sm"></span>
-                  <% end %>
-                  <%= for _ <- @race.terrain_difficulty..4//1 do %>
-                    <span class="w-2 h-4 bg-slate-200 rounded-sm"></span>
-                  <% end %>
-                <% else %>
-                  <span class="text-slate-300">-</span>
-                <% end %>
-              </div>
-            </div>
-
-            <div class="flex items-center justify-between">
-              <span class="text-slate-500 text-sm">{gettext("Surface")}</span>
-              <span class="font-semibold text-slate-900 text-sm">
-                {if @race.surface_type, do: String.capitalize(@race.surface_type), else: "-"}
-              </span>
-            </div>
-
-            <div class="flex items-center justify-between">
-              <span class="text-slate-500 text-sm">{gettext("Weather")}</span>
-              <span class="font-semibold text-slate-900 text-sm">
-                {if @race.weather_conditions, do: @race.weather_conditions, else: "-"}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <%= if @race.official_website do %>
-          <a
-            href={@race.official_website}
-            target="_blank"
-            class="block w-full py-4 bg-slate-900 text-white text-center rounded-xl font-bold hover:bg-slate-800 transition shadow-lg shadow-slate-900/20"
-          >
-            {gettext("Official Website")} &rarr;
-          </a>
-        <% end %>
       </div>
     </div>
   </div>
+
+  <%= if @selected_photo do %>
+    <div
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+    >
+      <button
+        phx-click="close_lightbox"
+        class="absolute top-6 right-6 text-white/70 hover:text-white p-2 rounded-full bg-white/10 hover:bg-white/20 transition z-50"
+      >
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+
+      <div class="relative max-w-7xl w-full h-full p-4 md:p-10 flex items-center justify-center">
+        <img
+          src={"#{@selected_photo.image_path}?v=#{DateTime.to_unix(@selected_photo.updated_at)}"}
+          class="max-h-[85vh] max-w-full rounded-lg shadow-2xl object-contain animate-scale-in"
+        />
+      </div>
+
+      <%= if length(@photos) > 1 do %>
+        <button
+          phx-click="prev_photo"
+          class="absolute left-4 md:left-8 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white p-4 rounded-full hover:bg-white/10 transition"
+        >
+          <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </button>
+        <button
+          phx-click="next_photo"
+          class="absolute right-4 md:right-8 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white p-4 rounded-full hover:bg-white/10 transition"
+        >
+          <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        </button>
+      <% end %>
+
+      <div class="absolute bottom-6 left-0 w-full text-center">
+        <p class="text-white/80 text-sm font-medium">
+          {Enum.find_index(@photos, &(&1.id == @selected_photo.id)) + 1} / {length(@photos)}
+        </p>
+      </div>
+    </div>
+  <% end %>
 </div>

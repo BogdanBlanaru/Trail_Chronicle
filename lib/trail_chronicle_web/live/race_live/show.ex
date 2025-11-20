@@ -18,10 +18,11 @@ defmodule TrailChronicleWeb.RaceLive.Show do
            socket
            |> assign(:race, race)
            |> assign(:photos, photos)
+           # For Lightbox
+           |> assign(:selected_photo, nil)
            |> assign(:pace, calculate_pace(race.distance_km, race.finish_time_seconds))
            |> assign(:current_path, "/races/#{id}")
            |> assign(:page_title, race.name)
-           # Allow uploads
            |> allow_upload(:gpx, accept: ~w(.gpx), max_entries: 1)
            |> allow_upload(:photos, accept: ~w(.jpg .jpeg .png), max_entries: 10)}
         else
@@ -42,9 +43,52 @@ defmodule TrailChronicleWeb.RaceLive.Show do
     end
   end
 
+  # --- LIGHTBOX HANDLERS ---
+
+  @impl true
+  def handle_event("open_lightbox", %{"id" => photo_id}, socket) do
+    photo = Enum.find(socket.assigns.photos, &(&1.id == photo_id))
+    {:noreply, assign(socket, :selected_photo, photo)}
+  end
+
+  def handle_event("close_lightbox", _, socket) do
+    {:noreply, assign(socket, :selected_photo, nil)}
+  end
+
+  def handle_event("next_photo", _, socket) do
+    navigate_photo(socket, 1)
+  end
+
+  def handle_event("prev_photo", _, socket) do
+    navigate_photo(socket, -1)
+  end
+
+  # Keyboard navigation for lightbox
+  def handle_event("keydown", %{"key" => key}, socket) do
+    case key do
+      "ArrowRight" -> navigate_photo(socket, 1)
+      "ArrowLeft" -> navigate_photo(socket, -1)
+      "Escape" -> {:noreply, assign(socket, :selected_photo, nil)}
+      _ -> {:noreply, socket}
+    end
+  end
+
+  # Helper to switch photos
+  defp navigate_photo(socket, step) do
+    photos = socket.assigns.photos
+    current = socket.assigns.selected_photo
+
+    if current && length(photos) > 1 do
+      current_idx = Enum.find_index(photos, &(&1.id == current.id))
+      new_idx = Integer.mod(current_idx + step, length(photos))
+      {:noreply, assign(socket, :selected_photo, Enum.at(photos, new_idx))}
+    else
+      {:noreply, socket}
+    end
+  end
+
   # --- UPLOAD HANDLERS ---
 
-  # FIX 1: Required to prevent FunctionClauseError during file selection
   @impl true
   def handle_event("validate", _params, socket) do
     {:noreply, socket}
@@ -72,12 +116,11 @@ defmodule TrailChronicleWeb.RaceLive.Show do
     end
   end
 
-  # FIX 2: Automatically create directory if it doesn't exist
   @impl true
   def handle_event("save_photos", _params, socket) do
     race = socket.assigns.race
 
-    # Ensure the directory exists
+    # Ensure directory exists
     upload_dir = Path.join(["priv", "static", "uploads"])
     File.mkdir_p!(upload_dir)
 
@@ -92,9 +135,12 @@ defmodule TrailChronicleWeb.RaceLive.Show do
       Racing.create_photo(%{race_id: race.id, image_path: url})
     end
 
+    # Reload photos from DB to ensure we have ID and timestamps
+    updated_photos = Racing.list_race_photos(race.id)
+
     {:noreply,
      socket
-     |> assign(:photos, Racing.list_race_photos(race.id))
+     |> assign(:photos, updated_photos)
      |> put_flash(:info, gettext("Memories saved!"))}
   end
 
@@ -103,7 +149,7 @@ defmodule TrailChronicleWeb.RaceLive.Show do
     ext
   end
 
-  # --- STANDARD HANDLERS ---
+  # --- EXISTING HANDLERS ---
 
   @impl true
   def handle_event("delete", _params, socket) do
