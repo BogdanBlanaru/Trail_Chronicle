@@ -216,4 +216,154 @@ defmodule TrailChronicle.Racing do
       total_elevation_gain_m: stats.total_elevation_gain_m || 0
     }
   end
+
+  @doc """
+  Returns races within a specific date range.
+  """
+  def list_races_between(%Athlete{id: athlete_id}, start_date, end_date) do
+    Race
+    |> where([r], r.athlete_id == ^athlete_id)
+    |> where([r], r.race_date >= ^start_date and r.race_date <= ^end_date)
+    |> order_by([r], asc: r.race_date)
+    |> Repo.all()
+  end
+
+  @doc """
+  Gets monthly distance stats for the current year.
+  Returns a list of %{month: 1, total_km: 120.5}
+  """
+  def get_monthly_distance_stats(%Athlete{id: athlete_id}, year) do
+    start_of_year = Date.new!(year, 1, 1)
+    end_of_year = Date.new!(year, 12, 31)
+
+    Race
+    |> where([r], r.athlete_id == ^athlete_id)
+    |> where([r], r.status == "completed")
+    |> where([r], r.race_date >= ^start_of_year and r.race_date <= ^end_of_year)
+    |> group_by([r], fragment("EXTRACT(MONTH FROM ?)", r.race_date))
+    |> select([r], %{
+      month: fragment("EXTRACT(MONTH FROM ?)::integer", r.race_date),
+      total_km: sum(r.distance_km)
+    })
+    |> order_by([r], fragment("EXTRACT(MONTH FROM ?)", r.race_date))
+    |> Repo.all()
+  end
+
+  @doc """
+  Gets year-to-date summary.
+  """
+  def get_ytd_stats(%Athlete{id: athlete_id}, year) do
+    start_of_year = Date.new!(year, 1, 1)
+    end_of_year = Date.new!(year, 12, 31)
+
+    Race
+    |> where([r], r.athlete_id == ^athlete_id)
+    |> where([r], r.status == "completed")
+    |> where([r], r.race_date >= ^start_of_year and r.race_date <= ^end_of_year)
+    |> select([r], %{
+      count: count(r.id),
+      distance: sum(r.distance_km),
+      elevation: sum(r.elevation_gain_m),
+      time: sum(r.finish_time_seconds)
+    })
+    |> Repo.one()
+  end
+
+  @doc """
+  Returns a list of years that have race data for the athlete.
+  """
+  def list_race_years(%Athlete{id: athlete_id}) do
+    query =
+      from r in Race,
+        where: r.athlete_id == ^athlete_id,
+        select: fragment("DISTINCT EXTRACT(YEAR FROM ?)::integer", r.race_date),
+        order_by: [desc: fragment("EXTRACT(YEAR FROM ?)::integer", r.race_date)]
+
+    Repo.all(query)
+  end
+
+  @doc """
+  Returns races within a specific date range (for Calendar).
+  """
+  def list_races_between(%Athlete{id: athlete_id}, start_date, end_date) do
+    Race
+    |> where([r], r.athlete_id == ^athlete_id)
+    |> where([r], r.race_date >= ^start_date and r.race_date <= ^end_date)
+    |> order_by([r], asc: r.race_date)
+    |> Repo.all()
+  end
+
+  @doc """
+  Gets monthly distance stats for a specific year.
+  """
+  def get_monthly_distance_stats(%Athlete{id: athlete_id}, year) do
+    start_of_year = Date.new!(year, 1, 1)
+    end_of_year = Date.new!(year, 12, 31)
+
+    Race
+    |> where([r], r.athlete_id == ^athlete_id)
+    |> where([r], r.status == "completed")
+    |> where([r], r.race_date >= ^start_of_year and r.race_date <= ^end_of_year)
+    |> group_by([r], fragment("EXTRACT(MONTH FROM ?)", r.race_date))
+    |> select([r], %{
+      month: fragment("EXTRACT(MONTH FROM ?)::integer", r.race_date),
+      total_km: sum(r.distance_km)
+    })
+    |> order_by([r], fragment("EXTRACT(MONTH FROM ?)", r.race_date))
+    |> Repo.all()
+  end
+
+  @doc """
+  Gets year-to-date summary for a specific year.
+  """
+  def get_yearly_stats(%Athlete{id: athlete_id}, year) do
+    start_of_year = Date.new!(year, 1, 1)
+    end_of_year = Date.new!(year, 12, 31)
+
+    stats =
+      Race
+      |> where([r], r.athlete_id == ^athlete_id)
+      |> where([r], r.status == "completed")
+      |> where([r], r.race_date >= ^start_of_year and r.race_date <= ^end_of_year)
+      |> select([r], %{
+        count: count(r.id),
+        distance: sum(r.distance_km),
+        elevation: sum(r.elevation_gain_m),
+        time: sum(r.finish_time_seconds)
+      })
+      |> Repo.one()
+
+    # Handle nil values if no races exist for that year
+    %{
+      count: stats.count || 0,
+      distance: stats.distance || Decimal.new(0),
+      elevation: stats.elevation || 0,
+      time: stats.time || 0
+    }
+  end
+
+  @doc """
+  Gets personal bests (fastest completed races by type)
+  """
+  def get_personal_bests(%Athlete{id: athlete_id}) do
+    # Group by race type and find the one with max distance (usually implied hierarchy)
+    # or specialized logic. For simplicity, let's just get the best of each category.
+
+    ["marathon", "half_marathon", "10k", "ultra"]
+    |> Enum.map(fn type ->
+      best_race =
+        Race
+        |> where([r], r.athlete_id == ^athlete_id)
+        |> where([r], r.status == "completed")
+        |> where([r], r.race_type == ^type)
+        # Fastest time
+        |> order_by([r], asc: r.finish_time_seconds)
+        |> limit(1)
+        |> Repo.one()
+
+      {type, best_race}
+    end)
+    |> Enum.filter(fn {_, race} -> race != nil end)
+    |> Enum.into(%{})
+  end
 end

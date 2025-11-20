@@ -1,0 +1,104 @@
+<div class="min-h-screen bg-slate-50 pb-12">
+  <div class="bg-white border-b border-slate-200 pt-10 pb-6 px-4 sm:px-6 lg:px-8 shadow-sm relative z-20">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-slate-900">{gettext("Training Calendar")}</h1>
+        <p class="text-slate-500 text-sm mt-1">
+          {gettext("Plan your season and review past performances.")}
+        </p>
+      </div>
+
+      <div class="flex items-center bg-slate-100 p-1.5 rounded-xl shadow-inner">
+        <button
+          phx-click="prev-month"
+          class="p-2 hover:bg-white rounded-lg text-slate-600 hover:text-slate-900 shadow-sm transition-all"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </button>
+        <button
+          phx-click="today"
+          class="px-4 py-2 text-sm font-bold text-slate-900 min-w-[140px] text-center hover:bg-white rounded-lg transition-colors"
+        >
+          {Calendar.strftime(@current_view_date, "%B %Y")}
+        </button>
+        <button
+          phx-click="next-month"
+          class="p-2 hover:bg-white rounded-lg text-slate-600 hover:text-slate-900 shadow-sm transition-all"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="grid grid-cols-7 border-b border-slate-200 bg-slate-50/50">
+        <%= for day <- ~w(Mon Tue Wed Thu Fri Sat Sun) do %>
+          <div class="py-3 text-center text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+            {day}
+          </div>
+        <% end %>
+      </div>
+
+      <div class="grid grid-cols-7 auto-rows-fr bg-slate-200 gap-px border-b border-slate-200">
+        <%= for day <- calendar_days(@calendar_start) do %>
+          <% is_current_month = day.month == @current_view_date.month %>
+          <% is_today = day == @today %>
+          <% races = Map.get(@races_map, day, []) %>
+
+          <div class={"relative min-h-[140px] bg-white p-2 transition-colors hover:bg-slate-50 group " <> if(!is_current_month, do: "bg-slate-50/30", else: "")}>
+            <div class="flex justify-between items-start mb-1">
+              <span class={"text-xs font-medium w-7 h-7 flex items-center justify-center rounded-full transition-all " <> 
+                if(is_today, do: "bg-blue-600 text-white shadow-md", else: if(is_current_month, do: "text-slate-700 group-hover:bg-slate-200", else: "text-slate-300"))}>
+                {day.day}
+              </span>
+            </div>
+
+            <div class="space-y-1.5 overflow-y-auto max-h-[100px] scrollbar-hide">
+              <%= for race <- races do %>
+                <.link
+                  navigate={~p"/races/#{race.id}"}
+                  class={"block text-[11px] px-2 py-1.5 rounded-md font-semibold truncate border transition-all hover:scale-[1.02] shadow-sm " <> 
+                  if(race.status == "completed", 
+                    do: "bg-emerald-50 text-emerald-700 border-emerald-100 hover:border-emerald-200", 
+                    else: "bg-amber-50 text-amber-700 border-amber-100 hover:border-amber-200")}
+                >
+                  <span class={"inline-block w-1.5 h-1.5 rounded-full mr-1 " <> if(race.status == "completed", do: "bg-emerald-500", else: "bg-amber-500")}>
+                  </span>
+                  {race.name}
+                </.link>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="mt-6 flex flex-wrap gap-6 justify-center md:justify-start text-sm font-medium text-slate-500">
+      <div class="flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full bg-emerald-500"></span> {gettext("Completed Race")}
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full bg-amber-500"></span> {gettext("Upcoming Event")}
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full bg-blue-600"></span> {gettext("Today")}
+      </div>
+    </div>
+  </div>
+</div>

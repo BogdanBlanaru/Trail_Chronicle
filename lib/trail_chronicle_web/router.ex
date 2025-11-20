@@ -47,12 +47,18 @@ defmodule TrailChronicleWeb.Router do
     live_session :require_authenticated_athlete,
       on_mount: [{TrailChronicleWeb.AthleteAuth, :ensure_authenticated}] do
       live "/dashboard", DashboardLive, :index
+
+      # Races
       live "/races", RaceLive.Index, :index
       live "/races/new", RaceLive.Form, :new
       live "/races/:id", RaceLive.Show, :show
       live "/races/:id/edit", RaceLive.Form, :edit
-      live "/calendar", PlaceholderLive, :calendar
-      live "/stats", PlaceholderLive, :stats
+
+      # New Pages
+      live "/calendar", CalendarLive, :index
+      live "/stats", StatsLive, :index
+
+      # Settings
       live "/athletes/settings", AthleteSettingsLive, :edit
       live "/athletes/settings/confirm_email/:token", AthleteSettingsLive, :confirm_email
     end
