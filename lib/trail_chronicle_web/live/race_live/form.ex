@@ -1,7 +1,7 @@
 defmodule TrailChronicleWeb.RaceLive.Form do
   use TrailChronicleWeb, :live_view
 
-  alias TrailChronicle.Racing
+  alias TrailChronicle.{Accounts, Racing}
   alias TrailChronicle.Racing.Race
 
   @impl true
@@ -12,18 +12,18 @@ defmodule TrailChronicleWeb.RaceLive.Form do
       {:ok,
        socket
        |> assign(:athlete, athlete)
-       |> assign(:current_path, socket.assigns.live_action)
+       # FIX: Don't assign atom to current_path. We'll set it in apply_action correctly.
        |> apply_action(socket.assigns.live_action, params)}
     else
       {:ok, redirect(socket, to: ~p"/athletes/log_in")}
     end
   end
 
-  # ... rest of the file remains the same ...
-
   defp apply_action(socket, :new, _params) do
     socket
     |> assign(:page_title, gettext("Log New Race"))
+    # FIX: Set as String
+    |> assign(:current_path, "/races/new")
     |> assign(:race, %Race{})
     |> assign(:changeset, Racing.change_race(%Race{}))
   end
@@ -34,6 +34,8 @@ defmodule TrailChronicleWeb.RaceLive.Form do
     if race.athlete_id == socket.assigns.athlete.id do
       socket
       |> assign(:page_title, gettext("Edit Race"))
+      # FIX: Set as String
+      |> assign(:current_path, "/races/#{id}/edit")
       |> assign(:race, race)
       |> assign(:changeset, Racing.change_race(race))
     else
@@ -42,6 +44,8 @@ defmodule TrailChronicleWeb.RaceLive.Form do
       |> redirect(to: ~p"/races")
     end
   end
+
+  # ... (Rest of handle_events remain the same) ...
 
   @impl true
   def handle_event("validate", %{"race" => race_params}, socket) do
