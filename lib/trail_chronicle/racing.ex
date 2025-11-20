@@ -270,6 +270,38 @@ defmodule TrailChronicle.Racing do
   end
 
   @doc """
+  Groups races by type for the donut chart.
+  Returns: %{"ultra" => 5, "trail" => 2}
+  """
+  def get_races_by_type(%Athlete{id: athlete_id}, year) do
+    start_of_year = Date.new!(year, 1, 1)
+    end_of_year = Date.new!(year, 12, 31)
+
+    Race
+    |> where([r], r.athlete_id == ^athlete_id)
+    |> where([r], r.race_date >= ^start_of_year and r.race_date <= ^end_of_year)
+    |> group_by([r], r.race_type)
+    |> select([r], {r.race_type, count(r.id)})
+    |> Repo.all()
+    |> Enum.into(%{})
+  end
+
+  @doc """
+  Gets a list of all dates where a race occurred in a given year (for Heatmap).
+  """
+  def get_activity_dates(%Athlete{id: athlete_id}, year) do
+    start_of_year = Date.new!(year, 1, 1)
+    end_of_year = Date.new!(year, 12, 31)
+
+    Race
+    |> where([r], r.athlete_id == ^athlete_id)
+    |> where([r], r.race_date >= ^start_of_year and r.race_date <= ^end_of_year)
+    |> select([r], {r.race_date, r.status})
+    |> Repo.all()
+    |> Enum.into(%{})
+  end
+
+  @doc """
   Returns a list of years that have race data for the athlete.
   """
   def list_race_years(%Athlete{id: athlete_id}) do
