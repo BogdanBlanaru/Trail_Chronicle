@@ -33,7 +33,7 @@
             d="M10 19l-7-7m0 0l7-7m-7 7h18"
           />
         </svg>
-         {gettext("Back to Races")}
+        {gettext("Back to Races")}
       </.link>
       <div class="flex gap-2">
         <.link
@@ -84,7 +84,7 @@
                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
               />
             </svg>
-             {Calendar.strftime(@race.race_date, "%B %d, %Y")}
+            {Calendar.strftime(@race.race_date, "%B %d, %Y")}
           </div>
 
           <div class="flex items-center">
@@ -106,7 +106,7 @@
                 d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
               />
             </svg>
-             {[city: @race.city, country: @race.country]
+            {[city: @race.city, country: @race.country]
             |> Enum.map(fn {_, v} -> v end)
             |> Enum.reject(&is_nil/1)
             |> Enum.join(", ")}
@@ -162,25 +162,76 @@
             <h3 class="font-bold text-slate-900 flex items-center gap-2">
               🗺️ {gettext("Route Map")}
             </h3>
-
             <%= if !@race.has_gpx do %>
               <form phx-submit="save_gpx" phx-change="validate" class="flex items-center gap-2">
                 <label class="cursor-pointer bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-xs font-bold hover:bg-blue-100 transition">
-                  {gettext("Select GPX")}
+                  {gettext("Upload GPX")}
                   <.live_file_input upload={@uploads.gpx} class="hidden" />
                 </label>
-
                 <%= if @uploads.gpx.entries != [] do %>
                   <button
                     type="submit"
                     class="bg-green-500 text-white px-3 py-1 rounded-lg text-xs font-bold hover:bg-green-600 transition shadow-sm animate-pulse"
                   >
-                    {gettext("Upload Route")}
+                    {gettext("Analyze")}
                   </button>
                 <% end %>
               </form>
             <% end %>
           </div>
+
+          <%= if @race.has_gpx do %>
+            <% # FIX: Convert Decimal to Float before doing math
+            dist_float = Decimal.to_float(@race.distance_km || Decimal.new(0))
+            elev = @race.elevation_gain_m || 0 %>
+            <div class="flex border-b border-slate-100 bg-white/50 backdrop-blur">
+              <div class="flex-1 py-3 text-center border-r border-slate-100">
+                <span class="block text-[10px] font-bold uppercase text-slate-400">
+                  {gettext("Avg Gradient")}
+                </span>
+                <span class="block text-sm font-bold text-slate-900">
+                  <%= if dist_float > 0 do %>
+                    {Float.round(elev / (dist_float * 1000) * 100, 1)}%
+                  <% else %>
+                    0%
+                  <% end %>
+                </span>
+              </div>
+              <div class="flex-1 py-3 text-center border-r border-slate-100">
+                <span class="block text-[10px] font-bold uppercase text-slate-400">
+                  {gettext("Climb Ratio")}
+                </span>
+                <span class="block text-sm font-bold text-slate-900">
+                  <%= if dist_float > 0 do %>
+                    {round(elev / dist_float)} m/km
+                  <% else %>
+                    0 m/km
+                  <% end %>
+                </span>
+              </div>
+              <div class="flex-1 py-3 text-center">
+                <span class="block text-[10px] font-bold uppercase text-slate-400">
+                  {gettext("Profile Type")}
+                </span>
+                <span class="block text-sm font-bold text-blue-600">
+                  <%= if dist_float > 0 do %>
+                    <%= cond do %>
+                      <% (elev / dist_float) < 10 -> %>
+                        Flat
+                      <% (elev / dist_float) < 25 -> %>
+                        Hilly
+                      <% (elev / dist_float) < 50 -> %>
+                        Mountain
+                      <% true -> %>
+                        Vertical
+                    <% end %>
+                  <% else %>
+                    -
+                  <% end %>
+                </span>
+              </div>
+            </div>
+          <% end %>
 
           <div class="relative h-[400px] bg-slate-100 w-full">
             <%= if @race.route_data do %>

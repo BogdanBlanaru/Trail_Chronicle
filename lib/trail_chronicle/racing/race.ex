@@ -53,9 +53,12 @@ defmodule TrailChronicle.Racing.Race do
     field :difficulties, :string
     field :gear_used, :string
 
-    # Media
+    # Media & Route
     field :cover_photo_url, :string
     field :has_gpx, :boolean, default: false
+    field :route_data, :map
+
+    has_many :photos, TrailChronicle.Racing.RacePhoto
 
     # Registration & Cost
     field :official_website, :string
@@ -63,9 +66,6 @@ defmodule TrailChronicle.Racing.Race do
     field :cost_eur, :decimal
     field :registration_deadline, :date
     field :is_registered, :boolean, default: false
-
-    field :route_data, :map
-    has_many :photos, TrailChronicle.Racing.RacePhoto
 
     timestamps(type: :utc_datetime)
   end
@@ -86,7 +86,7 @@ defmodule TrailChronicle.Racing.Race do
   def surface_types, do: @surface_types
 
   @doc """
-  Changeset for creating a new race.
+  Changeset for creating/updating a race.
   """
   def changeset(race, attrs) do
     race
@@ -168,7 +168,8 @@ defmodule TrailChronicle.Racing.Race do
   # Private function to validate performance fields consistency
   defp validate_performance_fields(changeset) do
     status = get_field(changeset, :status)
-    finish_time = get_change(changeset, :finish_time_seconds)
+
+    finish_time = get_field(changeset, :finish_time_seconds)
 
     cond do
       status == "completed" && is_nil(finish_time) ->
