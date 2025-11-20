@@ -8,6 +8,10 @@ defmodule TrailChronicleWeb.PlaceholderLive do
      |> assign(:current_path, get_current_path(socket.assigns.live_action))}
   end
 
+  def handle_event("switch-locale", %{"locale" => locale}, socket) do
+    {:noreply, TrailChronicleWeb.LiveHelpers.handle_locale_switch(socket, locale)}
+  end
+
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-gray-50 flex items-center justify-center px-4">

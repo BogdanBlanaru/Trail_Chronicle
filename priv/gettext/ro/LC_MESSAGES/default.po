@@ -380,3 +380,118 @@ msgstr "Această funcționalitate este în dezvoltare"
 
 msgid "Statistics Dashboard"
 msgstr "Panou Statistici"
+
+# ==================== AUTHENTICATION ====================
+msgid "Sign in to your account"
+msgstr "Autentifică-te în contul tău"
+
+msgid "Or"
+msgstr "Sau"
+
+msgid "create a new account"
+msgstr "creează un cont nou"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Password"
+msgstr "Parolă"
+
+msgid "Keep me logged in"
+msgstr "Păstrează-mă autentificat"
+
+msgid "Forgot your password?"
+msgstr "Ai uitat parola?"
+
+msgid "Signing in..."
+msgstr "Se autentifică..."
+
+msgid "Sign in"
+msgstr "Autentifică-te"
+
+msgid "Log in"
+msgstr "Autentifică-te"
+
+msgid "Create your account"
+msgstr "Creează-ți contul"
+
+msgid "sign in to your account"
+msgstr "autentifică-te în contul tău"
+
+msgid "First Name"
+msgstr "Prenume"
+
+msgid "Last Name"
+msgstr "Nume"
+
+msgid "Creating account..."
+msgstr "Se creează contul..."
+
+msgid "Create an account"
+msgstr "Creează un cont"
+
+msgid "Oops, something went wrong! Please check the errors below."
+msgstr "Oops, ceva nu a mers bine! Verifică erorile de mai jos."
+
+msgid "Register"
+msgstr "Înregistrează-te"
+
+msgid "We'll send a password reset link to your inbox"
+msgstr "Vom trimite un link de resetare a parolei la adresa ta de email"
+
+msgid "Sending..."
+msgstr "Se trimite..."
+
+msgid "Send password reset instructions"
+msgstr "Trimite instrucțiuni de resetare a parolei"
+
+msgid "Reset password"
+msgstr "Resetează parola"
+
+msgid "New password"
+msgstr "Parolă nouă"
+
+msgid "Confirm new password"
+msgstr "Confirmă parola nouă"
+
+msgid "Resetting..."
+msgstr "Se resetează..."
+
+msgid "Account Settings"
+msgstr "Setări Cont"
+
+msgid "Manage your account security and preferences"
+msgstr "Gestionează securitatea și preferințele contului tău"
+
+msgid "Change Email"
+msgstr "Schimbă Email-ul"
+
+msgid "Current password"
+msgstr "Parola curentă"
+
+msgid "Changing..."
+msgstr "Se schimbă..."
+
+msgid "Change Password"
+msgstr "Schimbă Parola"
+
+msgid "Confirm your account"
+msgstr "Confirmă-ți contul"
+
+msgid "Confirming..."
+msgstr "Se confirmă..."
+
+msgid "Confirm my account"
+msgstr "Confirmă-mi contul"
+
+msgid "Confirm Account"
+msgstr "Confirmă Contul"
+
+msgid "Resend confirmation instructions"
+msgstr "Retrimite instrucțiunile de confirmare"
+
+msgid "Log out"
+msgstr "Deconectează-te"
+
+msgid "Settings"
+msgstr "Setări"

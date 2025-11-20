@@ -1,12 +1,12 @@
 defmodule TrailChronicleWeb.RaceLive.Form do
   use TrailChronicleWeb, :live_view
 
-  alias TrailChronicle.{Accounts, Racing}
+  alias TrailChronicle.Racing
   alias TrailChronicle.Racing.Race
 
   @impl true
   def mount(params, _session, socket) do
-    athlete = Accounts.get_athlete_by_email("bogdan@example.com")
+    athlete = socket.assigns.current_athlete
 
     if athlete do
       {:ok,
@@ -15,13 +15,15 @@ defmodule TrailChronicleWeb.RaceLive.Form do
        |> assign(:current_path, socket.assigns.live_action)
        |> apply_action(socket.assigns.live_action, params)}
     else
-      {:ok, redirect(socket, to: ~p"/")}
+      {:ok, redirect(socket, to: ~p"/athletes/log_in")}
     end
   end
 
+  # ... rest of the file remains the same ...
+
   defp apply_action(socket, :new, _params) do
     socket
-    |> assign(:page_title, "Add New Race")
+    |> assign(:page_title, gettext("Log New Race"))
     |> assign(:race, %Race{})
     |> assign(:changeset, Racing.change_race(%Race{}))
   end
@@ -29,10 +31,16 @@ defmodule TrailChronicleWeb.RaceLive.Form do
   defp apply_action(socket, :edit, %{"id" => id}) do
     race = Racing.get_race!(id)
 
-    socket
-    |> assign(:page_title, "Edit Race")
-    |> assign(:race, race)
-    |> assign(:changeset, Racing.change_race(race))
+    if race.athlete_id == socket.assigns.athlete.id do
+      socket
+      |> assign(:page_title, gettext("Edit Race"))
+      |> assign(:race, race)
+      |> assign(:changeset, Racing.change_race(race))
+    else
+      socket
+      |> put_flash(:error, gettext("Unauthorized access."))
+      |> redirect(to: ~p"/races")
+    end
   end
 
   @impl true
@@ -50,12 +58,17 @@ defmodule TrailChronicleWeb.RaceLive.Form do
     save_race(socket, socket.assigns.live_action, race_params)
   end
 
+  @impl true
+  def handle_event("switch-locale", %{"locale" => locale}, socket) do
+    {:noreply, TrailChronicleWeb.LiveHelpers.handle_locale_switch(socket, locale)}
+  end
+
   defp save_race(socket, :new, race_params) do
     case Racing.create_race(socket.assigns.athlete, race_params) do
       {:ok, race} ->
         {:noreply,
          socket
-         |> put_flash(:info, "Race created successfully!")
+         |> put_flash(:info, gettext("Race created successfully!"))
          |> redirect(to: ~p"/races/#{race.id}")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -68,25 +81,11 @@ defmodule TrailChronicleWeb.RaceLive.Form do
       {:ok, race} ->
         {:noreply,
          socket
-         |> put_flash(:info, "Race updated successfully!")
+         |> put_flash(:info, gettext("Race updated successfully!"))
          |> redirect(to: ~p"/races/#{race.id}")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, changeset: changeset)}
     end
   end
-
-  defp format_time_input(nil), do: ""
-
-  defp format_time_input(seconds) when is_integer(seconds) do
-    hours = div(seconds, 3600)
-    minutes = div(rem(seconds, 3600), 60)
-    secs = rem(seconds, 60)
-
-    "#{pad(hours)}:#{pad(minutes)}:#{pad(secs)}"
-  end
-
-  defp format_time_input(_), do: ""
-
-  defp pad(num), do: String.pad_leading(to_string(num), 2, "0")
 end

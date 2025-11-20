@@ -380,3 +380,118 @@ msgstr "This feature is under development"
 
 msgid "Statistics Dashboard"
 msgstr "Statistics Dashboard"
+
+# ==================== AUTHENTICATION ====================
+msgid "Sign in to your account"
+msgstr "Sign in to your account"
+
+msgid "Or"
+msgstr "Or"
+
+msgid "create a new account"
+msgstr "create a new account"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Password"
+msgstr "Password"
+
+msgid "Keep me logged in"
+msgstr "Keep me logged in"
+
+msgid "Forgot your password?"
+msgstr "Forgot your password?"
+
+msgid "Signing in..."
+msgstr "Signing in..."
+
+msgid "Sign in"
+msgstr "Sign in"
+
+msgid "Log in"
+msgstr "Log in"
+
+msgid "Create your account"
+msgstr "Create your account"
+
+msgid "sign in to your account"
+msgstr "sign in to your account"
+
+msgid "First Name"
+msgstr "First Name"
+
+msgid "Last Name"
+msgstr "Last Name"
+
+msgid "Creating account..."
+msgstr "Creating account..."
+
+msgid "Create an account"
+msgstr "Create an account"
+
+msgid "Oops, something went wrong! Please check the errors below."
+msgstr "Oops, something went wrong! Please check the errors below."
+
+msgid "Register"
+msgstr "Register"
+
+msgid "We'll send a password reset link to your inbox"
+msgstr "We'll send a password reset link to your inbox"
+
+msgid "Sending..."
+msgstr "Sending..."
+
+msgid "Send password reset instructions"
+msgstr "Send password reset instructions"
+
+msgid "Reset password"
+msgstr "Reset password"
+
+msgid "New password"
+msgstr "New password"
+
+msgid "Confirm new password"
+msgstr "Confirm new password"
+
+msgid "Resetting..."
+msgstr "Resetting..."
+
+msgid "Account Settings"
+msgstr "Account Settings"
+
+msgid "Manage your account security and preferences"
+msgstr "Manage your account security and preferences"
+
+msgid "Change Email"
+msgstr "Change Email"
+
+msgid "Current password"
+msgstr "Current password"
+
+msgid "Changing..."
+msgstr "Changing..."
+
+msgid "Change Password"
+msgstr "Change Password"
+
+msgid "Confirm your account"
+msgstr "Confirm your account"
+
+msgid "Confirming..."
+msgstr "Confirming..."
+
+msgid "Confirm my account"
+msgstr "Confirm my account"
+
+msgid "Confirm Account"
+msgstr "Confirm Account"
+
+msgid "Resend confirmation instructions"
+msgstr "Resend confirmation instructions"
+
+msgid "Log out"
+msgstr "Log out"
+
+msgid "Settings"
+msgstr "Settings"

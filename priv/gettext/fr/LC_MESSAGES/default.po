@@ -380,3 +380,118 @@ msgstr "Cette fonctionnalité est en développement"
 
 msgid "Statistics Dashboard"
 msgstr "Tableau de Statistiques"
+
+# ==================== AUTHENTICATION ====================
+msgid "Sign in to your account"
+msgstr "Connectez-vous à votre compte"
+
+msgid "Or"
+msgstr "Ou"
+
+msgid "create a new account"
+msgstr "créer un nouveau compte"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Password"
+msgstr "Mot de passe"
+
+msgid "Keep me logged in"
+msgstr "Rester connecté"
+
+msgid "Forgot your password?"
+msgstr "Mot de passe oublié?"
+
+msgid "Signing in..."
+msgstr "Connexion en cours..."
+
+msgid "Sign in"
+msgstr "Se connecter"
+
+msgid "Log in"
+msgstr "Se connecter"
+
+msgid "Create your account"
+msgstr "Créez votre compte"
+
+msgid "sign in to your account"
+msgstr "connectez-vous à votre compte"
+
+msgid "First Name"
+msgstr "Prénom"
+
+msgid "Last Name"
+msgstr "Nom"
+
+msgid "Creating account..."
+msgstr "Création du compte..."
+
+msgid "Create an account"
+msgstr "Créer un compte"
+
+msgid "Oops, something went wrong! Please check the errors below."
+msgstr "Oops, quelque chose s'est mal passé! Veuillez vérifier les erreurs ci-dessous."
+
+msgid "Register"
+msgstr "S'inscrire"
+
+msgid "We'll send a password reset link to your inbox"
+msgstr "Nous vous enverrons un lien de réinitialisation par email"
+
+msgid "Sending..."
+msgstr "Envoi en cours..."
+
+msgid "Send password reset instructions"
+msgstr "Envoyer les instructions de réinitialisation"
+
+msgid "Reset password"
+msgstr "Réinitialiser le mot de passe"
+
+msgid "New password"
+msgstr "Nouveau mot de passe"
+
+msgid "Confirm new password"
+msgstr "Confirmer le nouveau mot de passe"
+
+msgid "Resetting..."
+msgstr "Réinitialisation..."
+
+msgid "Account Settings"
+msgstr "Paramètres du Compte"
+
+msgid "Manage your account security and preferences"
+msgstr "Gérez la sécurité et les préférences de votre compte"
+
+msgid "Change Email"
+msgstr "Changer l'Email"
+
+msgid "Current password"
+msgstr "Mot de passe actuel"
+
+msgid "Changing..."
+msgstr "Modification..."
+
+msgid "Change Password"
+msgstr "Changer le Mot de Passe"
+
+msgid "Confirm your account"
+msgstr "Confirmez votre compte"
+
+msgid "Confirming..."
+msgstr "Confirmation..."
+
+msgid "Confirm my account"
+msgstr "Confirmer mon compte"
+
+msgid "Confirm Account"
+msgstr "Confirmer le Compte"
+
+msgid "Resend confirmation instructions"
+msgstr "Renvoyer les instructions de confirmation"
+
+msgid "Log out"
+msgstr "Se déconnecter"
+
+msgid "Settings"
+msgstr "Paramètres"
