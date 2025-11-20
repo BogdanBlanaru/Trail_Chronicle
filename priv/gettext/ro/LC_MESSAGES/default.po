@@ -1,0 +1,382 @@
+## Romanian translations
+msgid ""
+msgstr ""
+"Language: ro\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100>0 && n%100<20)) ? 1 : 2);\n"
+
+# ==================== NAVIGATION ====================
+msgid "Dashboard"
+msgstr "Panou de Control"
+
+# ==================== RACE LIST ====================
+msgid "All Races"
+msgstr "Toate Cursele"
+
+# ==================== RACE FORM ====================
+msgid "Add New Race"
+msgstr "Adaugă Cursă Nouă"
+
+msgid "Calendar"
+msgstr "Calendar"
+
+msgid "Statistics"
+msgstr "Statistici"
+
+msgid "View profile"
+msgstr "Vezi profilul"
+
+# ==================== DASHBOARD ====================
+msgid "Welcome to Trail Chronicle"
+msgstr "Bine ai venit la Trail Chronicle"
+
+msgid "Your Trail Running Journey"
+msgstr "Călătoria Ta în Alergare Montană"
+
+msgid "Total Races"
+msgstr "Curse Totale"
+
+msgid "Total Distance"
+msgstr "Distanță Totală"
+
+msgid "Total Elevation Gain"
+msgstr "Denivelat Total Pozitiv"
+
+msgid "Upcoming Races"
+msgstr "Curse Viitoare"
+
+msgid "Recent Races"
+msgstr "Curse Recente"
+
+msgid "View All Races"
+msgstr "Vezi Toate Cursele"
+
+msgid "No upcoming races scheduled"
+msgstr "Nicio cursă viitoare programată"
+
+msgid "No completed races yet"
+msgstr "Încă nicio cursă completată"
+
+msgid "races"
+msgstr "curse"
+
+msgid "km"
+msgstr "km"
+
+msgid "m"
+msgstr "m"
+
+msgid "Filter"
+msgstr "Filtrează"
+
+msgid "All"
+msgstr "Toate"
+
+msgid "Completed"
+msgstr "Completate"
+
+msgid "Upcoming"
+msgstr "Viitoare"
+
+msgid "Search races..."
+msgstr "Caută curse..."
+
+msgid "No races found"
+msgstr "Nicio cursă găsită"
+
+msgid "Start your trail running journey by adding your first race!"
+msgstr "Începe călătoria ta în alergare montană adăugând prima cursă!"
+
+msgid "Race"
+msgstr "Cursă"
+
+msgid "Date"
+msgstr "Data"
+
+msgid "Distance"
+msgstr "Distanță"
+
+msgid "Elevation"
+msgstr "Denivelat"
+
+msgid "Location"
+msgstr "Locație"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Actions"
+msgstr "Acțiuni"
+
+msgid "View"
+msgstr "Vizualizează"
+
+msgid "Edit"
+msgstr "Editează"
+
+msgid "Delete"
+msgstr "Șterge"
+
+msgid "Edit Race"
+msgstr "Editează Cursa"
+
+msgid "Basic Information"
+msgstr "Informații de Bază"
+
+msgid "Race Name"
+msgstr "Numele Cursei"
+
+msgid "Race Date"
+msgstr "Data Cursei"
+
+msgid "Race Type"
+msgstr "Tip Cursă"
+
+msgid "Country"
+msgstr "Țară"
+
+msgid "City"
+msgstr "Oraș"
+
+msgid "Distance (km)"
+msgstr "Distanță (km)"
+
+msgid "Elevation Gain (m)"
+msgstr "Denivelat Pozitiv (m)"
+
+msgid "Elevation Loss (m)"
+msgstr "Denivelat Negativ (m)"
+
+msgid "Terrain Difficulty"
+msgstr "Dificultate Teren"
+
+msgid "Performance & Conditions"
+msgstr "Performanță și Condiții"
+
+msgid "Finish Time"
+msgstr "Timp Final"
+
+msgid "Overall Position"
+msgstr "Poziție Generală"
+
+msgid "Category Position"
+msgstr "Poziție Categorie"
+
+msgid "Total Participants"
+msgstr "Participanți Totali"
+
+msgid "Weather Conditions"
+msgstr "Condiții Meteo"
+
+msgid "Temperature (°C)"
+msgstr "Temperatură (°C)"
+
+msgid "Surface Type"
+msgstr "Tip Suprafață"
+
+msgid "Your Story"
+msgstr "Povestea Ta"
+
+msgid "Race Report"
+msgstr "Raport Cursă"
+
+msgid "Highlights"
+msgstr "Momente Speciale"
+
+msgid "Difficulties"
+msgstr "Provocări"
+
+msgid "Gear Used"
+msgstr "Echipament Folosit"
+
+msgid "Registration & Links"
+msgstr "Înregistrare și Link-uri"
+
+msgid "Official Website"
+msgstr "Site Oficial"
+
+msgid "Registration URL"
+msgstr "Link Înregistrare"
+
+msgid "Cost (EUR)"
+msgstr "Cost (EUR)"
+
+msgid "Registration Deadline"
+msgstr "Termen Înregistrare"
+
+msgid "I am registered for this race"
+msgstr "Sunt înregistrat la această cursă"
+
+msgid "Cancel"
+msgstr "Anulează"
+
+msgid "Create Race"
+msgstr "Creează Cursa"
+
+msgid "Update Race"
+msgstr "Actualizează Cursa"
+
+msgid "Save"
+msgstr "Salvează"
+
+msgid "Back to Races"
+msgstr "Înapoi la Curse"
+
+# ==================== RACE TYPES ====================
+msgid "Ultra"
+msgstr "Ultra"
+
+msgid "Marathon"
+msgstr "Maraton"
+
+msgid "Half Marathon"
+msgstr "Semimaraton"
+
+# ==================== SURFACE TYPES ====================
+msgid "Trail"
+msgstr "Potecă"
+
+msgid "Skyrace"
+msgstr "Skyrace"
+
+msgid "5K"
+msgstr "5K"
+
+msgid "10K"
+msgstr "10K"
+
+msgid "Asphalt"
+msgstr "Asfalt"
+
+msgid "Mountain"
+msgstr "Munte"
+
+msgid "Mixed"
+msgstr "Mixt"
+
+msgid "Snow"
+msgstr "Zăpadă"
+
+msgid "Sand"
+msgstr "Nisip"
+
+# ==================== STATUS ====================
+msgid "completed"
+msgstr "Completată"
+
+msgid "upcoming"
+msgstr "Viitoare"
+
+msgid "dns"
+msgstr "DNS"
+
+msgid "dnf"
+msgstr "DNF"
+
+# ==================== RACE DETAIL ====================
+msgid "Race Details"
+msgstr "Detalii Cursă"
+
+msgid "Overview"
+msgstr "Prezentare Generală"
+
+msgid "My Performance"
+msgstr "Performanța Mea"
+
+msgid "Race Story"
+msgstr "Povestea Cursei"
+
+msgid "Race Information"
+msgstr "Informații Cursă"
+
+msgid "participants"
+msgstr "participanți"
+
+msgid "Registered"
+msgstr "Înregistrat"
+
+msgid "Not Registered"
+msgstr "Neînregistrat"
+
+msgid "Visit Official Website"
+msgstr "Vizitează Site-ul Oficial"
+
+msgid "Register Now"
+msgstr "Înregistrează-te Acum"
+
+msgid "Are you sure you want to delete this race?"
+msgstr "Ești sigur că vrei să ștergi această cursă?"
+
+# ==================== FLASH MESSAGES ====================
+msgid "Success!"
+msgstr "Succes!"
+
+msgid "Error!"
+msgstr "Eroare!"
+
+msgid "We can't find the internet"
+msgstr "Nu putem găsi conexiunea la internet"
+
+msgid "Attempting to reconnect"
+msgstr "Se încearcă reconectarea"
+
+msgid "Something went wrong!"
+msgstr "Ceva nu a mers bine!"
+
+msgid "Hang in there while we get back on track"
+msgstr "Te rugăm să ai răbdare, încercăm să ne reconectăm"
+
+msgid "Race created successfully!"
+msgstr "Cursă creată cu succes!"
+
+msgid "Race updated successfully!"
+msgstr "Cursă actualizată cu succes!"
+
+msgid "Race deleted successfully!"
+msgstr "Cursă ștearsă cu succes!"
+
+# ==================== COMMON ====================
+msgid "close"
+msgstr "închide"
+
+msgid "Loading..."
+msgstr "Se încarcă..."
+
+msgid "Search"
+msgstr "Caută"
+
+msgid "Clear"
+msgstr "Curăță"
+
+msgid "Apply"
+msgstr "Aplică"
+
+msgid "Back"
+msgstr "Înapoi"
+
+msgid "Next"
+msgstr "Următorul"
+
+msgid "Previous"
+msgstr "Anterior"
+
+msgid "Submit"
+msgstr "Trimite"
+
+msgid "Yes"
+msgstr "Da"
+
+msgid "No"
+msgstr "Nu"
+
+# ==================== PLACEHOLDERS ====================
+msgid "Calendar View"
+msgstr "Vizualizare Calendar"
+
+msgid "Coming Soon"
+msgstr "În Curând"
+
+msgid "This feature is under development"
+msgstr "Această funcționalitate este în dezvoltare"
+
+msgid "Statistics Dashboard"
+msgstr "Panou Statistici"

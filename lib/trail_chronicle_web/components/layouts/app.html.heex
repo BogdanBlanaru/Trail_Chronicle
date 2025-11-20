@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang={@locale || "en"} class="h-full bg-gray-100">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf-token" content={get_csrf_token()} />
+    <.live_title suffix=" · Trail Chronicle">
+      {assigns[:page_title] || "Trail Chronicle"}
+    </.live_title>
+    <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
+    <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
+    </script>
+  </head>
+  <body class="h-full">
+    <div
+      class="min-h-full"
+      x-data="{ sidebarOpen: false }"
+      @keydown.escape.window="sidebarOpen = false"
+    >
+      <!-- Mobile sidebar overlay -->
+      <div
+        x-show="sidebarOpen"
+        x-transition:enter="transition-opacity ease-linear duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition-opacity ease-linear duration-300"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="fixed inset-0 bg-gray-600 bg-opacity-75 z-40 md:hidden"
+        @click="sidebarOpen = false"
+        style="display: none;"
+      >
+      </div>
+      
+<!-- Mobile sidebar -->
+      <div
+        x-show="sidebarOpen"
+        x-transition:enter="transition ease-in-out duration-300 transform"
+        x-transition:enter-start="-translate-x-full"
+        x-transition:enter-end="translate-x-0"
+        x-transition:leave="transition ease-in-out duration-300 transform"
+        x-transition:leave-start="translate-x-0"
+        x-transition:leave-end="-translate-x-full"
+        class="fixed inset-y-0 left-0 w-64 bg-gradient-to-b from-blue-800 to-indigo-900 z-50 md:hidden"
+        style="display: none;"
+      >
+        <div class="flex flex-col h-full pt-5 pb-4 overflow-y-auto">
+          <!-- Close button -->
+          <div class="flex items-center justify-between px-4 mb-8">
+            <div class="flex items-center">
+              <span class="text-3xl">🏔️</span>
+              <span class="ml-2 text-white text-xl font-bold">Trail Chronicle</span>
+            </div>
+            <button
+              @click="sidebarOpen = false"
+              class="text-white hover:text-blue-200 focus:outline-none focus:ring-2 focus:ring-white rounded-md"
+            >
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+          
+<!-- Navigation -->
+          <nav class="flex-1 px-2 space-y-1">
+            <.link navigate={~p"/"} class={nav_link_class(@current_path, "/")}>
+              <svg class="mr-3 h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                />
+              </svg>
+              {gettext("Dashboard")}
+            </.link>
+
+            <.link navigate={~p"/races"} class={nav_link_class(@current_path, "/races")}>
+              <svg class="mr-3 h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                />
+              </svg>
+              {gettext("All Races")}
+            </.link>
+
+            <.link navigate={~p"/races/new"} class={nav_link_class(@current_path, "/races/new")}>
+              <svg class="mr-3 h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              {gettext("Add New Race")}
+            </.link>
+
+            <.link navigate={~p"/calendar"} class={nav_link_class(@current_path, "/calendar")}>
+              <svg class="mr-3 h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              {gettext("Calendar")}
+            </.link>
+
+            <.link navigate={~p"/stats"} class={nav_link_class(@current_path, "/stats")}>
+              <svg class="mr-3 h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+              {gettext("Statistics")}
+            </.link>
+          </nav>
+          
+<!-- User Section -->
+          <div class="flex-shrink-0 flex border-t border-blue-700 p-4">
+            <div class="flex items-center w-full">
+              <div class="flex-shrink-0">
+                <div class="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                  <%= if assigns[:athlete] do %>
+                    {String.first(@athlete.first_name)}{String.first(@athlete.last_name)}
+                  <% else %>
+                    ?
+                  <% end %>
+                </div>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm font-medium text-white">
+                  <%= if assigns[:athlete] do %>
+                    {@athlete.first_name} {@athlete.last_name}
+                  <% else %>
+                    Guest
+                  <% end %>
+                </p>
+                <p class="text-xs font-medium text-blue-200">{gettext("View profile")}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+<!-- Desktop Sidebar -->
+      <div class="hidden md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col">
+        <div class="flex flex-col flex-grow bg-gradient-to-b from-blue-800 to-indigo-900 pt-5 pb-4 overflow-y-auto">
+          <!-- Logo -->
+          <div class="flex items-center flex-shrink-0 px-4 mb-8">
+            <span class="text-3xl">🏔️</span>
+            <span class="ml-2 text-white text-xl font-bold">Trail Chronicle</span>
+          </div>
+          
+<!-- Navigation -->
+          <nav class="flex-1 px-2 space-y-1">
+            <.link navigate={~p"/"} class={nav_link_class(@current_path, "/")}>
+              <svg class="mr-3 h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                />
+              </svg>
+              {gettext("Dashboard")}
+            </.link>
+
+            <.link navigate={~p"/races"} class={nav_link_class(@current_path, "/races")}>
+              <svg class="mr-3 h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                />
+              </svg>
+              {gettext("All Races")}
+            </.link>
+
+            <.link navigate={~p"/races/new"} class={nav_link_class(@current_path, "/races/new")}>
+              <svg class="mr-3 h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              {gettext("Add New Race")}
+            </.link>
+
+            <.link navigate={~p"/calendar"} class={nav_link_class(@current_path, "/calendar")}>
+              <svg class="mr-3 h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              {gettext("Calendar")}
+            </.link>
+
+            <.link navigate={~p"/stats"} class={nav_link_class(@current_path, "/stats")}>
+              <svg class="mr-3 h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+              {gettext("Statistics")}
+            </.link>
+          </nav>
+          
+<!-- Language Switcher - Desktop -->
+          <div class="px-4 py-2 border-t border-blue-700">
+            <.language_switcher locale={@locale} />
+          </div>
+          
+<!-- User Section -->
+          <div class="flex-shrink-0 flex border-t border-blue-700 p-4">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <div class="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                  <%= if assigns[:athlete] do %>
+                    {String.first(@athlete.first_name)}{String.first(@athlete.last_name)}
+                  <% else %>
+                    ?
+                  <% end %>
+                </div>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm font-medium text-white">
+                  <%= if assigns[:athlete] do %>
+                    {@athlete.first_name} {@athlete.last_name}
+                  <% else %>
+                    Guest
+                  <% end %>
+                </p>
+                <p class="text-xs font-medium text-blue-200">{gettext("View profile")}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+<!-- Main content area -->
+      <div class="md:pl-64 flex flex-col flex-1">
+        <!-- Mobile header -->
+        <div class="sticky top-0 z-10 md:hidden bg-white border-b border-gray-200">
+          <div class="flex items-center justify-between px-4 py-3">
+            <button
+              @click="sidebarOpen = true"
+              class="text-gray-500 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+            >
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </button>
+            <div class="flex items-center">
+              <span class="text-2xl">🏔️</span>
+              <span class="ml-2 text-lg font-bold text-gray-900">Trail Chronicle</span>
+            </div>
+            <div class="w-6"></div>
+          </div>
+        </div>
+        
+<!-- Page content -->
+        <main class="flex-1">
+          {@inner_content}
+        </main>
+      </div>
+    </div>
+    
+<!-- Alpine.js for mobile menu -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js">
+    </script>
+  </body>
+</html>

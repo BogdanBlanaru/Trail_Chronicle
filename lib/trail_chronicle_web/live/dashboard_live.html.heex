@@ -1,0 +1,217 @@
+<div class="min-h-screen bg-gray-50">
+  <%= if @athlete do %>
+    <!-- Header Section -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <h1 class="text-4xl font-bold mb-2">Welcome back, {@athlete.first_name}! 👋</h1>
+
+        <p class="text-blue-100 text-lg">Ready to log your next adventure?</p>
+      </div>
+    </div>
+    <!-- Stats Section -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Total Races Card -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 bg-blue-100 rounded-md p-3">
+              <svg
+                class="h-6 w-6 text-blue-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+
+            <div class="ml-4">
+              <p class="text-sm font-medium text-gray-500">Total Races</p>
+
+              <p class="text-2xl font-bold text-gray-900">{@stats.total_races}</p>
+            </div>
+          </div>
+        </div>
+        <!-- Total Distance Card -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 bg-green-100 rounded-md p-3">
+              <svg
+                class="h-6 w-6 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                />
+              </svg>
+            </div>
+
+            <div class="ml-4">
+              <p class="text-sm font-medium text-gray-500">Total Distance</p>
+
+              <p class="text-2xl font-bold text-gray-900">
+                {Decimal.round(@stats.total_distance_km, 1)} km
+              </p>
+            </div>
+          </div>
+        </div>
+        <!-- Total Elevation Card -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 bg-purple-100 rounded-md p-3">
+              <svg
+                class="h-6 w-6 text-purple-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                />
+              </svg>
+            </div>
+
+            <div class="ml-4">
+              <p class="text-sm font-medium text-gray-500">Total Elevation</p>
+
+              <p class="text-2xl font-bold text-gray-900">{@stats.total_elevation_gain_m} m</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Action Buttons -->
+      <div class="mb-8 flex gap-4">
+        <%= live_redirect to: ~p"/races/new", class: "bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-200" do %>
+          ➕ Add New Race
+        <% end %>
+
+        <%= live_redirect to: ~p"/races", class: "bg-white hover:bg-gray-50 text-gray-700 font-semibold py-3 px-6 rounded-lg shadow-md border border-gray-300 transition duration-200" do %>
+          📋 View All Races
+        <% end %>
+      </div>
+      <!-- Upcoming Races Section -->
+      <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">Upcoming Races 📅</h2>
+
+        <%= if Enum.empty?(@upcoming_races) do %>
+          <div class="bg-white rounded-lg shadow-md p-8 text-center">
+            <p class="text-gray-500">No upcoming races scheduled</p>
+
+            <p class="text-sm text-gray-400 mt-2">Plan your next adventure!</p>
+          </div>
+        <% else %>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <%= for race <- @upcoming_races do %>
+              <%= live_redirect to: ~p"/races/#{race.id}", class: "block" do %>
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-200 cursor-pointer">
+                  <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-2"></div>
+
+                  <div class="p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">{race.name}</h3>
+
+                    <div class="space-y-2 text-sm text-gray-600">
+                      <p>📍 {race.city}, {race.country}</p>
+
+                      <p>📆 {Calendar.strftime(race.race_date, "%B %d, %Y")}</p>
+
+                      <p>🏃 {race.distance_km} km</p>
+
+                      <%= if race.elevation_gain_m do %>
+                        <p>⛰️ {race.elevation_gain_m} m elevation</p>
+                      <% end %>
+
+                      <%= if race.is_registered do %>
+                        <span class="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                          ✓ Registered
+                        </span>
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+      <!-- Recent Races Section -->
+      <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">Recent Races 🏆</h2>
+
+        <%= if Enum.empty?(@recent_races) do %>
+          <div class="bg-white rounded-lg shadow-md p-8 text-center">
+            <p class="text-gray-500">No completed races yet</p>
+
+            <p class="text-sm text-gray-400 mt-2">Start your trail running journey!</p>
+          </div>
+        <% else %>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <%= for race <- @recent_races do %>
+              <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-200 cursor-pointer">
+                <!-- Photo placeholder -->
+                <div class="h-48 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                  <%= if race.cover_photo_url do %>
+                    <img
+                      src={race.cover_photo_url}
+                      alt={race.name}
+                      class="w-full h-full object-cover"
+                    />
+                  <% else %>
+                    <span class="text-6xl">🏔️</span>
+                  <% end %>
+                </div>
+
+                <div class="p-6">
+                  <h3 class="text-lg font-bold text-gray-900 mb-2">{race.name}</h3>
+
+                  <div class="space-y-2 text-sm text-gray-600">
+                    <p>📍 {race.city}, {race.country}</p>
+
+                    <p>📆 {Calendar.strftime(race.race_date, "%B %d, %Y")}</p>
+
+                    <p>🏃 {race.distance_km} km</p>
+
+                    <%= if race.finish_time_seconds do %>
+                      <p>⏱️ {format_time(race.finish_time_seconds)}</p>
+                    <% end %>
+
+                    <%= if race.overall_position do %>
+                      <p>🏅 Position: {race.overall_position} / {race.total_participants}</p>
+                    <% end %>
+                  </div>
+
+                  <%= if race.race_report do %>
+                    <p class="mt-4 text-gray-700 text-sm line-clamp-2">{race.race_report}</p>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% else %>
+    <!-- No Athlete Found -->
+    <div class="max-w-md mx-auto mt-20 bg-white rounded-lg shadow-md p-8 text-center">
+      <h2 class="text-2xl font-bold text-gray-900 mb-4">Welcome to Trail Chronicle!</h2>
+
+      <p class="text-gray-600 mb-6">Create your athlete account to start tracking your races.</p>
+
+      <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg">
+        Create Account
+      </button>
+    </div>
+  <% end %>
+</div>

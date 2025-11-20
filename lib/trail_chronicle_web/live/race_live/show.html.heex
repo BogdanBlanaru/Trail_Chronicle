@@ -1,0 +1,344 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Hero Section with Cover Photo -->
+  <div class="relative h-96 bg-gradient-to-br from-blue-600 to-indigo-800">
+    <%= if @race.cover_photo_url do %>
+      <img
+        src={@race.cover_photo_url}
+        alt={@race.name}
+        class="absolute inset-0 w-full h-full object-cover opacity-50"
+      />
+    <% else %>
+      <div class="absolute inset-0 flex items-center justify-center">
+        <span class="text-9xl opacity-30">
+          {if @race.race_type == "trail", do: "🏔️", else: "🏃"}
+        </span>
+      </div>
+    <% end %>
+    <!-- Overlay Content -->
+    <div class="relative h-full flex items-end">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 w-full">
+        <div class="flex items-center gap-3 mb-4">
+          <%= live_redirect to: ~p"/races", class: "text-white hover:text-blue-200 transition-colors" do %>
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          <% end %>
+
+          <span class={"inline-flex items-center px-4 py-2 rounded-full text-sm font-medium " <> status_badge_class(@race.status)}>
+            {status_text(@race.status)}
+          </span>
+        </div>
+
+        <h1 class="text-5xl font-bold text-white mb-2">{@race.name}</h1>
+
+        <p class="text-xl text-blue-100">
+          {@race.city}, {@race.country} • {Calendar.strftime(@race.race_date, "%B %d, %Y")}
+        </p>
+      </div>
+    </div>
+  </div>
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Action Buttons -->
+    <div class="mb-8 flex gap-4">
+      <%= live_redirect to: ~p"/races/#{@race.id}/edit", class: "inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" do %>
+        <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+          />
+        </svg>
+        Edit Race
+      <% end %>
+
+      <button
+        phx-click="delete"
+        id="delete-button"
+        class="inline-flex items-center px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50 transition-colors"
+      >
+        <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+          />
+        </svg>
+        Delete Race
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Left Column - Stats & Details -->
+      <div class="lg:col-span-1 space-y-6">
+        <!-- Quick Stats Card -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-lg font-bold text-gray-900 mb-4">Quick Stats 📊</h2>
+
+          <div class="space-y-3">
+            <div class="flex justify-between items-center pb-3 border-b border-gray-200">
+              <span class="text-sm text-gray-600">Distance</span>
+              <span class="text-lg font-bold text-gray-900">{@race.distance_km} km</span>
+            </div>
+
+            <%= if @race.elevation_gain_m do %>
+              <div class="flex justify-between items-center pb-3 border-b border-gray-200">
+                <span class="text-sm text-gray-600">Elevation Gain</span>
+                <span class="text-lg font-bold text-gray-900">{@race.elevation_gain_m} m</span>
+              </div>
+            <% end %>
+
+            <%= if @race.elevation_loss_m do %>
+              <div class="flex justify-between items-center pb-3 border-b border-gray-200">
+                <span class="text-sm text-gray-600">Elevation Loss</span>
+                <span class="text-lg font-bold text-gray-900">{@race.elevation_loss_m} m</span>
+              </div>
+            <% end %>
+
+            <%= if @race.finish_time_seconds do %>
+              <div class="flex justify-between items-center pb-3 border-b border-gray-200">
+                <span class="text-sm text-gray-600">Finish Time</span>
+                <span class="text-lg font-bold text-blue-600">
+                  {format_time(@race.finish_time_seconds)}
+                </span>
+              </div>
+
+              <div class="flex justify-between items-center pb-3 border-b border-gray-200">
+                <span class="text-sm text-gray-600">Average Pace</span>
+                <span class="text-lg font-bold text-gray-900">
+                  {calculate_pace(@race.distance_km, @race.finish_time_seconds)}
+                </span>
+              </div>
+            <% end %>
+
+            <%= if @race.terrain_difficulty do %>
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-600">Terrain Difficulty</span>
+                <span class="text-lg">
+                  {terrain_difficulty_stars(@race.terrain_difficulty) |> Enum.join()}
+                </span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+        <!-- Performance Card (for completed races) -->
+        <%= if @race.status == "completed" and @race.overall_position do %>
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-lg font-bold text-gray-900 mb-4">Performance 🏆</h2>
+
+            <div class="space-y-3">
+              <div class="flex justify-between items-center pb-3 border-b border-gray-200">
+                <span class="text-sm text-gray-600">Overall Position</span>
+                <span class="text-lg font-bold text-gray-900">{@race.overall_position}</span>
+              </div>
+
+              <%= if @race.category_position do %>
+                <div class="flex justify-between items-center pb-3 border-b border-gray-200">
+                  <span class="text-sm text-gray-600">Category Position</span>
+                  <span class="text-lg font-bold text-gray-900">{@race.category_position}</span>
+                </div>
+              <% end %>
+
+              <%= if @race.total_participants do %>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-600">Total Participants</span>
+                  <span class="text-lg font-bold text-gray-900">{@race.total_participants}</span>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+        <!-- Conditions Card -->
+        <%= if @race.weather_conditions || @race.temperature_celsius || @race.surface_type do %>
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-lg font-bold text-gray-900 mb-4">Conditions 🌤️</h2>
+
+            <div class="space-y-3">
+              <%= if @race.weather_conditions do %>
+                <div>
+                  <span class="text-sm text-gray-600">Weather</span>
+                  <p class="text-gray-900 mt-1">{@race.weather_conditions}</p>
+                </div>
+              <% end %>
+
+              <%= if @race.temperature_celsius do %>
+                <div>
+                  <span class="text-sm text-gray-600">Temperature</span>
+                  <p class="text-gray-900 mt-1">{@race.temperature_celsius}°C</p>
+                </div>
+              <% end %>
+
+              <%= if @race.surface_type do %>
+                <div>
+                  <span class="text-sm text-gray-600">Surface</span>
+                  <p class="text-gray-900 mt-1 capitalize">{@race.surface_type}</p>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+        <!-- Registration Info (for upcoming races) -->
+        <%= if @race.status == "upcoming" do %>
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-lg font-bold text-gray-900 mb-4">Registration 📝</h2>
+
+            <div class="space-y-3">
+              <%= if @race.is_registered do %>
+                <div class="flex items-center text-green-600 mb-2">
+                  <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span class="font-medium">Registered</span>
+                </div>
+              <% else %>
+                <div class="flex items-center text-gray-500 mb-2">
+                  <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span class="font-medium">Not yet registered</span>
+                </div>
+              <% end %>
+
+              <%= if @race.cost_eur do %>
+                <div class="flex justify-between items-center pb-3 border-b border-gray-200">
+                  <span class="text-sm text-gray-600">Cost</span>
+                  <span class="text-lg font-bold text-gray-900">€{@race.cost_eur}</span>
+                </div>
+              <% end %>
+
+              <%= if @race.registration_deadline do %>
+                <div class="flex justify-between items-center pb-3 border-b border-gray-200">
+                  <span class="text-sm text-gray-600">Deadline</span>
+                  <span class="text-gray-900">
+                    {Calendar.strftime(@race.registration_deadline, "%B %d, %Y")}
+                  </span>
+                </div>
+              <% end %>
+
+              <%= if @race.official_website do %>
+                <a
+                  href={@race.official_website}
+                  target="_blank"
+                  class="block text-blue-600 hover:text-blue-700 text-sm"
+                >
+                  Visit official website →
+                </a>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+      <!-- Right Column - Story & Map -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Race Report -->
+        <%= if @race.race_report do %>
+          <div class="bg-white rounded-lg shadow-md p-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Race Report 📖</h2>
+
+            <div class="prose prose-lg max-w-none">
+              <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{@race.race_report}</p>
+            </div>
+          </div>
+        <% end %>
+        <!-- Highlights -->
+        <%= if @race.highlights do %>
+          <div class="bg-green-50 rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-bold text-green-900 mb-3 flex items-center">
+              <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                />
+              </svg>
+              Highlights
+            </h3>
+
+            <p class="text-gray-700 whitespace-pre-wrap">{@race.highlights}</p>
+          </div>
+        <% end %>
+        <!-- Difficulties -->
+        <%= if @race.difficulties do %>
+          <div class="bg-orange-50 rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-bold text-orange-900 mb-3 flex items-center">
+              <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+              Challenges
+            </h3>
+
+            <p class="text-gray-700 whitespace-pre-wrap">{@race.difficulties}</p>
+          </div>
+        <% end %>
+        <!-- Gear Used -->
+        <%= if @race.gear_used do %>
+          <div class="bg-blue-50 rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-bold text-blue-900 mb-3 flex items-center">
+              <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                />
+              </svg>
+              Gear Used
+            </h3>
+
+            <p class="text-gray-700 whitespace-pre-wrap">{@race.gear_used}</p>
+          </div>
+        <% end %>
+        
+<!-- Map -->
+        <%= if @race.latitude && @race.longitude do %>
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Location 📍</h2>
+
+            <div class="aspect-w-16 aspect-h-9 bg-gray-200 rounded-lg overflow-hidden">
+              <!-- Static map placeholder - we'll add interactive map later -->
+              <div class="flex items-center justify-center bg-gradient-to-br from-blue-100 to-green-100">
+                <div class="text-center">
+                  <p class="text-2xl mb-2">🗺️</p>
+
+                  <p class="text-gray-700 font-medium">{@race.city}, {@race.country}</p>
+
+                  <p class="text-sm text-gray-500 mt-1">
+                    {Float.round(Decimal.to_float(@race.latitude), 4)}, {Float.round(
+                      Decimal.to_float(@race.longitude),
+                      4
+                    )}
+                  </p>
+
+                  <p class="text-xs text-gray-400 mt-2">(Interactive map coming soon)</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

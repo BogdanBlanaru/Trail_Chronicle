@@ -1,0 +1,382 @@
+## French translations
+msgid ""
+msgstr ""
+"Language: fr\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+# ==================== NAVIGATION ====================
+msgid "Dashboard"
+msgstr "Tableau de Bord"
+
+# ==================== RACE LIST ====================
+msgid "All Races"
+msgstr "Toutes les Courses"
+
+# ==================== RACE FORM ====================
+msgid "Add New Race"
+msgstr "Ajouter une Course"
+
+msgid "Calendar"
+msgstr "Calendrier"
+
+msgid "Statistics"
+msgstr "Statistiques"
+
+msgid "View profile"
+msgstr "Voir le profil"
+
+# ==================== DASHBOARD ====================
+msgid "Welcome to Trail Chronicle"
+msgstr "Bienvenue sur Trail Chronicle"
+
+msgid "Your Trail Running Journey"
+msgstr "Votre Aventure en Trail Running"
+
+msgid "Total Races"
+msgstr "Courses Totales"
+
+msgid "Total Distance"
+msgstr "Distance Totale"
+
+msgid "Total Elevation Gain"
+msgstr "Dénivelé Positif Total"
+
+msgid "Upcoming Races"
+msgstr "Courses à Venir"
+
+msgid "Recent Races"
+msgstr "Courses Récentes"
+
+msgid "View All Races"
+msgstr "Voir Toutes les Courses"
+
+msgid "No upcoming races scheduled"
+msgstr "Aucune course à venir programmée"
+
+msgid "No completed races yet"
+msgstr "Aucune course complétée pour le moment"
+
+msgid "races"
+msgstr "courses"
+
+msgid "km"
+msgstr "km"
+
+msgid "m"
+msgstr "m"
+
+msgid "Filter"
+msgstr "Filtrer"
+
+msgid "All"
+msgstr "Toutes"
+
+msgid "Completed"
+msgstr "Complétées"
+
+msgid "Upcoming"
+msgstr "À Venir"
+
+msgid "Search races..."
+msgstr "Rechercher des courses..."
+
+msgid "No races found"
+msgstr "Aucune course trouvée"
+
+msgid "Start your trail running journey by adding your first race!"
+msgstr "Commencez votre aventure de trail en ajoutant votre première course!"
+
+msgid "Race"
+msgstr "Course"
+
+msgid "Date"
+msgstr "Date"
+
+msgid "Distance"
+msgstr "Distance"
+
+msgid "Elevation"
+msgstr "Dénivelé"
+
+msgid "Location"
+msgstr "Lieu"
+
+msgid "Status"
+msgstr "Statut"
+
+msgid "Actions"
+msgstr "Actions"
+
+msgid "View"
+msgstr "Voir"
+
+msgid "Edit"
+msgstr "Modifier"
+
+msgid "Delete"
+msgstr "Supprimer"
+
+msgid "Edit Race"
+msgstr "Modifier la Course"
+
+msgid "Basic Information"
+msgstr "Informations de Base"
+
+msgid "Race Name"
+msgstr "Nom de la Course"
+
+msgid "Race Date"
+msgstr "Date de la Course"
+
+msgid "Race Type"
+msgstr "Type de Course"
+
+msgid "Country"
+msgstr "Pays"
+
+msgid "City"
+msgstr "Ville"
+
+msgid "Distance (km)"
+msgstr "Distance (km)"
+
+msgid "Elevation Gain (m)"
+msgstr "Dénivelé Positif (m)"
+
+msgid "Elevation Loss (m)"
+msgstr "Dénivelé Négatif (m)"
+
+msgid "Terrain Difficulty"
+msgstr "Difficulté du Terrain"
+
+msgid "Performance & Conditions"
+msgstr "Performance et Conditions"
+
+msgid "Finish Time"
+msgstr "Temps Final"
+
+msgid "Overall Position"
+msgstr "Position Générale"
+
+msgid "Category Position"
+msgstr "Position Catégorie"
+
+msgid "Total Participants"
+msgstr "Participants Totaux"
+
+msgid "Weather Conditions"
+msgstr "Conditions Météo"
+
+msgid "Temperature (°C)"
+msgstr "Température (°C)"
+
+msgid "Surface Type"
+msgstr "Type de Surface"
+
+msgid "Your Story"
+msgstr "Votre Histoire"
+
+msgid "Race Report"
+msgstr "Rapport de Course"
+
+msgid "Highlights"
+msgstr "Points Forts"
+
+msgid "Difficulties"
+msgstr "Difficultés"
+
+msgid "Gear Used"
+msgstr "Équipement Utilisé"
+
+msgid "Registration & Links"
+msgstr "Inscription et Liens"
+
+msgid "Official Website"
+msgstr "Site Officiel"
+
+msgid "Registration URL"
+msgstr "Lien d'Inscription"
+
+msgid "Cost (EUR)"
+msgstr "Coût (EUR)"
+
+msgid "Registration Deadline"
+msgstr "Date Limite d'Inscription"
+
+msgid "I am registered for this race"
+msgstr "Je suis inscrit à cette course"
+
+msgid "Cancel"
+msgstr "Annuler"
+
+msgid "Create Race"
+msgstr "Créer la Course"
+
+msgid "Update Race"
+msgstr "Mettre à Jour la Course"
+
+msgid "Save"
+msgstr "Enregistrer"
+
+msgid "Back to Races"
+msgstr "Retour aux Courses"
+
+# ==================== RACE TYPES ====================
+msgid "Ultra"
+msgstr "Ultra"
+
+msgid "Marathon"
+msgstr "Marathon"
+
+msgid "Half Marathon"
+msgstr "Semi-Marathon"
+
+# ==================== SURFACE TYPES ====================
+msgid "Trail"
+msgstr "Sentier"
+
+msgid "Skyrace"
+msgstr "Skyrace"
+
+msgid "5K"
+msgstr "5K"
+
+msgid "10K"
+msgstr "10K"
+
+msgid "Asphalt"
+msgstr "Asphalte"
+
+msgid "Mountain"
+msgstr "Montagne"
+
+msgid "Mixed"
+msgstr "Mixte"
+
+msgid "Snow"
+msgstr "Neige"
+
+msgid "Sand"
+msgstr "Sable"
+
+# ==================== STATUS ====================
+msgid "completed"
+msgstr "Complétée"
+
+msgid "upcoming"
+msgstr "À Venir"
+
+msgid "dns"
+msgstr "DNS"
+
+msgid "dnf"
+msgstr "DNF"
+
+# ==================== RACE DETAIL ====================
+msgid "Race Details"
+msgstr "Détails de la Course"
+
+msgid "Overview"
+msgstr "Aperçu"
+
+msgid "My Performance"
+msgstr "Ma Performance"
+
+msgid "Race Story"
+msgstr "Histoire de la Course"
+
+msgid "Race Information"
+msgstr "Informations sur la Course"
+
+msgid "participants"
+msgstr "participants"
+
+msgid "Registered"
+msgstr "Inscrit"
+
+msgid "Not Registered"
+msgstr "Non Inscrit"
+
+msgid "Visit Official Website"
+msgstr "Visiter le Site Officiel"
+
+msgid "Register Now"
+msgstr "S'inscrire Maintenant"
+
+msgid "Are you sure you want to delete this race?"
+msgstr "Êtes-vous sûr de vouloir supprimer cette course?"
+
+# ==================== FLASH MESSAGES ====================
+msgid "Success!"
+msgstr "Succès!"
+
+msgid "Error!"
+msgstr "Erreur!"
+
+msgid "We can't find the internet"
+msgstr "Nous ne trouvons pas Internet"
+
+msgid "Attempting to reconnect"
+msgstr "Tentative de reconnexion"
+
+msgid "Something went wrong!"
+msgstr "Quelque chose s'est mal passé!"
+
+msgid "Hang in there while we get back on track"
+msgstr "Veuillez patienter pendant que nous rétablissons la connexion"
+
+msgid "Race created successfully!"
+msgstr "Course créée avec succès!"
+
+msgid "Race updated successfully!"
+msgstr "Course mise à jour avec succès!"
+
+msgid "Race deleted successfully!"
+msgstr "Course supprimée avec succès!"
+
+# ==================== COMMON ====================
+msgid "close"
+msgstr "fermer"
+
+msgid "Loading..."
+msgstr "Chargement..."
+
+msgid "Search"
+msgstr "Rechercher"
+
+msgid "Clear"
+msgstr "Effacer"
+
+msgid "Apply"
+msgstr "Appliquer"
+
+msgid "Back"
+msgstr "Retour"
+
+msgid "Next"
+msgstr "Suivant"
+
+msgid "Previous"
+msgstr "Précédent"
+
+msgid "Submit"
+msgstr "Soumettre"
+
+msgid "Yes"
+msgstr "Oui"
+
+msgid "No"
+msgstr "Non"
+
+# ==================== PLACEHOLDERS ====================
+msgid "Calendar View"
+msgstr "Vue Calendrier"
+
+msgid "Coming Soon"
+msgstr "Bientôt Disponible"
+
+msgid "This feature is under development"
+msgstr "Cette fonctionnalité est en développement"
+
+msgid "Statistics Dashboard"
+msgstr "Tableau de Statistiques"

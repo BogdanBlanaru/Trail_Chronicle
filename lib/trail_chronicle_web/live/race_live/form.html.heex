@@ -1,0 +1,579 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <.link
+        navigate={~p"/races"}
+        class="text-blue-600 hover:text-blue-700 font-medium mb-4 inline-flex items-center"
+      >
+        <svg class="h-5 w-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+        Back to Races
+      </.link>
+      <h1 class="text-3xl font-bold text-gray-900 mt-2">{@page_title}</h1>
+      <p class="mt-2 text-sm text-gray-600">
+        {if @live_action == :new,
+          do: "Add a new race to your collection",
+          else: "Update race details"}
+      </p>
+    </div>
+    
+<!-- Form -->
+    <div class="bg-white rounded-lg shadow-md">
+      <.form
+        :let={f}
+        for={@changeset}
+        phx-change="validate"
+        phx-submit="save"
+        class="space-y-8 p-8"
+      >
+        <!-- Basic Information Section -->
+        <div>
+          <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <span class="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center mr-3">
+              1
+            </span>
+            Basic Information
+          </h2>
+
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <!-- Race Name -->
+            <div class="sm:col-span-2">
+              <label for="race_name" class="block text-sm font-medium text-gray-700 mb-2">
+                Race Name <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name={f[:name].name}
+                id="race_name"
+                value={f[:name].value}
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                placeholder="e.g., Retezat Sky Race 2024"
+                required
+              />
+            </div>
+            
+<!-- Race Date -->
+            <div>
+              <label for="race_date" class="block text-sm font-medium text-gray-700 mb-2">
+                Race Date <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                name={f[:race_date].name}
+                id="race_date"
+                value={f[:race_date].value}
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                required
+              />
+            </div>
+            
+<!-- Race Type -->
+            <div>
+              <label for="race_type" class="block text-sm font-medium text-gray-700 mb-2">
+                Race Type
+              </label>
+              <select
+                name={f[:race_type].name}
+                id="race_type"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              >
+                <option value="">Select type...</option>
+                <%= for type <- Race.race_types() do %>
+                  <option value={type} selected={f[:race_type].value == type}>
+                    {String.replace(type, "_", " ") |> String.capitalize()}
+                  </option>
+                <% end %>
+              </select>
+            </div>
+            
+<!-- Status -->
+            <div>
+              <label for="race_status" class="block text-sm font-medium text-gray-700 mb-2">
+                Status <span class="text-red-500">*</span>
+              </label>
+              <select
+                name={f[:status].name}
+                id="race_status"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                required
+              >
+                <%= for status <- Race.statuses() do %>
+                  <option value={status} selected={f[:status].value == status}>
+                    {String.capitalize(status)}
+                  </option>
+                <% end %>
+              </select>
+            </div>
+          </div>
+        </div>
+        
+<!-- Location & Distance Section -->
+        <div class="border-t border-gray-200 pt-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <span class="bg-green-100 text-green-600 rounded-full w-8 h-8 flex items-center justify-center mr-3">
+              2
+            </span>
+            Location & Distance
+          </h2>
+
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <!-- Country -->
+            <div>
+              <label for="race_country" class="block text-sm font-medium text-gray-700 mb-2">
+                Country
+              </label>
+              <input
+                type="text"
+                name={f[:country].name}
+                id="race_country"
+                value={f[:country].value}
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                placeholder="e.g., Romania"
+              />
+            </div>
+            
+<!-- City -->
+            <div>
+              <label for="race_city" class="block text-sm font-medium text-gray-700 mb-2">
+                City
+              </label>
+              <input
+                type="text"
+                name={f[:city].name}
+                id="race_city"
+                value={f[:city].value}
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                placeholder="e.g., Brașov"
+              />
+            </div>
+            
+<!-- Latitude -->
+            <div>
+              <label for="race_latitude" class="block text-sm font-medium text-gray-700 mb-2">
+                Latitude
+              </label>
+              <input
+                type="number"
+                step="0.000001"
+                name={f[:latitude].name}
+                id="race_latitude"
+                value={f[:latitude].value}
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                placeholder="e.g., 45.6527"
+              />
+            </div>
+            
+<!-- Longitude -->
+            <div>
+              <label for="race_longitude" class="block text-sm font-medium text-gray-700 mb-2">
+                Longitude
+              </label>
+              <input
+                type="number"
+                step="0.000001"
+                name={f[:longitude].name}
+                id="race_longitude"
+                value={f[:longitude].value}
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                placeholder="e.g., 25.6069"
+              />
+            </div>
+            
+<!-- Distance -->
+            <div>
+              <label for="race_distance" class="block text-sm font-medium text-gray-700 mb-2">
+                Distance (km)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                name={f[:distance_km].name}
+                id="race_distance"
+                value={f[:distance_km].value}
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                placeholder="e.g., 42.195"
+              />
+            </div>
+            
+<!-- Elevation Gain -->
+            <div>
+              <label
+                for="race_elevation_gain"
+                class="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Elevation Gain (m)
+              </label>
+              <input
+                type="number"
+                name={f[:elevation_gain_m].name}
+                id="race_elevation_gain"
+                value={f[:elevation_gain_m].value}
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                placeholder="e.g., 3200"
+              />
+            </div>
+            
+<!-- Elevation Loss -->
+            <div>
+              <label
+                for="race_elevation_loss"
+                class="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Elevation Loss (m)
+              </label>
+              <input
+                type="number"
+                name={f[:elevation_loss_m].name}
+                id="race_elevation_loss"
+                value={f[:elevation_loss_m].value}
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                placeholder="e.g., 3200"
+              />
+            </div>
+            
+<!-- Terrain Difficulty -->
+            <div>
+              <label
+                for="race_terrain_difficulty"
+                class="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Terrain Difficulty (1-5)
+              </label>
+              <select
+                name={f[:terrain_difficulty].name}
+                id="race_terrain_difficulty"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              >
+                <option value="">Not specified</option>
+                <%= for difficulty <- 1..5 do %>
+                  <option value={difficulty} selected={f[:terrain_difficulty].value == difficulty}>
+                    {difficulty} {String.duplicate("⭐", difficulty)}
+                  </option>
+                <% end %>
+              </select>
+            </div>
+          </div>
+        </div>
+        
+<!-- Performance Section -->
+        <div class="border-t border-gray-200 pt-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <span class="bg-purple-100 text-purple-600 rounded-full w-8 h-8 flex items-center justify-center mr-3">
+              3
+            </span>
+            Performance & Conditions
+          </h2>
+
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <!-- Finish Time (seconds) -->
+            <div>
+              <label for="race_finish_time" class="block text-sm font-medium text-gray-700 mb-2">
+                Finish Time (seconds)
+              </label>
+              <input
+                type="number"
+                name={f[:finish_time_seconds].name}
+                id="race_finish_time"
+                value={f[:finish_time_seconds].value}
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                placeholder="e.g., 28800 (8 hours)"
+              />
+              <p class="mt-1 text-xs text-gray-500">
+                Enter time in seconds (e.g., 3600 = 1 hour)
+              </p>
+            </div>
+            
+<!-- Overall Position -->
+            <div>
+              <label
+                for="race_overall_position"
+                class="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Overall Position
+              </label>
+              <input
+                type="number"
+                name={f[:overall_position].name}
+                id="race_overall_position"
+                value={f[:overall_position].value}
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                placeholder="e.g., 45"
+              />
+            </div>
+            
+<!-- Category Position -->
+            <div>
+              <label
+                for="race_category_position"
+                class="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Category Position
+              </label>
+              <input
+                type="number"
+                name={f[:category_position].name}
+                id="race_category_position"
+                value={f[:category_position].value}
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                placeholder="e.g., 12"
+              />
+            </div>
+            
+<!-- Total Participants -->
+            <div>
+              <label
+                for="race_total_participants"
+                class="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Total Participants
+              </label>
+              <input
+                type="number"
+                name={f[:total_participants].name}
+                id="race_total_participants"
+                value={f[:total_participants].value}
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                placeholder="e.g., 120"
+              />
+            </div>
+            
+<!-- Weather -->
+            <div>
+              <label for="race_weather" class="block text-sm font-medium text-gray-700 mb-2">
+                Weather Conditions
+              </label>
+              <input
+                type="text"
+                name={f[:weather_conditions].name}
+                id="race_weather"
+                value={f[:weather_conditions].value}
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                placeholder="e.g., Sunny, hot"
+              />
+            </div>
+            
+<!-- Temperature -->
+            <div>
+              <label for="race_temperature" class="block text-sm font-medium text-gray-700 mb-2">
+                Temperature (°C)
+              </label>
+              <input
+                type="number"
+                name={f[:temperature_celsius].name}
+                id="race_temperature"
+                value={f[:temperature_celsius].value}
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                placeholder="e.g., 25"
+              />
+            </div>
+            
+<!-- Surface Type -->
+            <div>
+              <label for="race_surface_type" class="block text-sm font-medium text-gray-700 mb-2">
+                Surface Type
+              </label>
+              <select
+                name={f[:surface_type].name}
+                id="race_surface_type"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              >
+                <option value="">Select surface...</option>
+                <%= for surface <- Race.surface_types() do %>
+                  <option value={surface} selected={f[:surface_type].value == surface}>
+                    {String.capitalize(surface)}
+                  </option>
+                <% end %>
+              </select>
+            </div>
+          </div>
+        </div>
+        
+<!-- Race Story Section -->
+        <div class="border-t border-gray-200 pt-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <span class="bg-yellow-100 text-yellow-600 rounded-full w-8 h-8 flex items-center justify-center mr-3">
+              4
+            </span>
+            Your Story
+          </h2>
+
+          <div class="space-y-6">
+            <!-- Race Report -->
+            <div>
+              <label for="race_report" class="block text-sm font-medium text-gray-700 mb-2">
+                Race Report
+              </label>
+              <textarea
+                name={f[:race_report].name}
+                id="race_report"
+                rows="6"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                placeholder="Tell your story... How was the race? What did you experience?"
+              ><%= f[:race_report].value %></textarea>
+              <p class="mt-1 text-xs text-gray-500">
+                Share your experience, emotions, and journey
+              </p>
+            </div>
+            
+<!-- Highlights -->
+            <div>
+              <label for="race_highlights" class="block text-sm font-medium text-gray-700 mb-2">
+                Highlights ✨
+              </label>
+              <textarea
+                name={f[:highlights].name}
+                id="race_highlights"
+                rows="3"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                placeholder="Best moments, favorite sections, memorable views..."
+              ><%= f[:highlights].value %></textarea>
+            </div>
+            
+<!-- Difficulties -->
+            <div>
+              <label for="race_difficulties" class="block text-sm font-medium text-gray-700 mb-2">
+                Challenges ⚠️
+              </label>
+              <textarea
+                name={f[:difficulties].name}
+                id="race_difficulties"
+                rows="3"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                placeholder="Tough sections, problems encountered, lessons learned..."
+              ><%= f[:difficulties].value %></textarea>
+            </div>
+            
+<!-- Gear Used -->
+            <div>
+              <label for="race_gear" class="block text-sm font-medium text-gray-700 mb-2">
+                Gear Used 🎒
+              </label>
+              <textarea
+                name={f[:gear_used].name}
+                id="race_gear"
+                rows="2"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                placeholder="Shoes, poles, vest, nutrition..."
+              ><%= f[:gear_used].value %></textarea>
+            </div>
+          </div>
+        </div>
+        
+<!-- Registration Info -->
+        <div class="border-t border-gray-200 pt-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <span class="bg-red-100 text-red-600 rounded-full w-8 h-8 flex items-center justify-center mr-3">
+              5
+            </span>
+            Registration & Links
+          </h2>
+
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <!-- Official Website -->
+            <div class="sm:col-span-2">
+              <label for="race_website" class="block text-sm font-medium text-gray-700 mb-2">
+                Official Website
+              </label>
+              <input
+                type="url"
+                name={f[:official_website].name}
+                id="race_website"
+                value={f[:official_website].value}
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                placeholder="https://example.com"
+              />
+            </div>
+            
+<!-- Registration URL -->
+            <div class="sm:col-span-2">
+              <label
+                for="race_registration_url"
+                class="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Registration URL
+              </label>
+              <input
+                type="url"
+                name={f[:registration_url].name}
+                id="race_registration_url"
+                value={f[:registration_url].value}
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                placeholder="https://registration.example.com"
+              />
+            </div>
+            
+<!-- Cost -->
+            <div>
+              <label for="race_cost" class="block text-sm font-medium text-gray-700 mb-2">
+                Cost (EUR)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                name={f[:cost_eur].name}
+                id="race_cost"
+                value={f[:cost_eur].value}
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                placeholder="e.g., 150.00"
+              />
+            </div>
+            
+<!-- Registration Deadline -->
+            <div>
+              <label
+                for="race_registration_deadline"
+                class="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Registration Deadline
+              </label>
+              <input
+                type="date"
+                name={f[:registration_deadline].name}
+                id="race_registration_deadline"
+                value={f[:registration_deadline].value}
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              />
+            </div>
+            
+<!-- Is Registered -->
+            <div class="sm:col-span-2">
+              <label class="flex items-center">
+                <input
+                  type="checkbox"
+                  name={f[:is_registered].name}
+                  value="true"
+                  checked={f[:is_registered].value}
+                  class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+                <span class="ml-2 text-sm text-gray-700">I am registered for this race</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        
+<!-- Form Actions -->
+        <div class="border-t border-gray-200 pt-8 flex justify-end gap-4">
+          <.link
+            navigate={~p"/races"}
+            class="px-6 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </.link>
+          <button
+            type="submit"
+            class="px-6 py-3 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm"
+          >
+            {if @live_action == :new, do: "Create Race", else: "Update Race"}
+          </button>
+        </div>
+      </.form>
+    </div>
+  </div>
+</div>
