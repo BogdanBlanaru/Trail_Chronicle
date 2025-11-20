@@ -46,7 +46,6 @@ defmodule TrailChronicleWeb.CalendarLive do
     date = socket.assigns.current_view_date
 
     start_of_month = Date.beginning_of_month(date)
-    end_of_month = Date.end_of_month(date)
 
     # Calendar math: Find the Monday before the 1st of the month
     dow = Date.day_of_week(start_of_month, :monday)

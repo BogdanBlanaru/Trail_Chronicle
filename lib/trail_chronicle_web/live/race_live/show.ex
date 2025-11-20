@@ -1,7 +1,7 @@
 defmodule TrailChronicleWeb.RaceLive.Show do
   use TrailChronicleWeb, :live_view
 
-  alias TrailChronicle.{Accounts, Racing}
+  alias TrailChronicle.{Racing}
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
@@ -18,7 +18,6 @@ defmodule TrailChronicleWeb.RaceLive.Show do
            socket
            |> assign(:race, race)
            |> assign(:photos, photos)
-           # For Lightbox
            |> assign(:selected_photo, nil)
            |> assign(:pace, calculate_pace(race.distance_km, race.finish_time_seconds))
            |> assign(:current_path, "/races/#{id}")
@@ -43,51 +42,7 @@ defmodule TrailChronicleWeb.RaceLive.Show do
     end
   end
 
-  # --- LIGHTBOX HANDLERS ---
-
-  @impl true
-  def handle_event("open_lightbox", %{"id" => photo_id}, socket) do
-    photo = Enum.find(socket.assigns.photos, &(&1.id == photo_id))
-    {:noreply, assign(socket, :selected_photo, photo)}
-  end
-
-  def handle_event("close_lightbox", _, socket) do
-    {:noreply, assign(socket, :selected_photo, nil)}
-  end
-
-  def handle_event("next_photo", _, socket) do
-    navigate_photo(socket, 1)
-  end
-
-  def handle_event("prev_photo", _, socket) do
-    navigate_photo(socket, -1)
-  end
-
-  # Keyboard navigation for lightbox
-  def handle_event("keydown", %{"key" => key}, socket) do
-    case key do
-      "ArrowRight" -> navigate_photo(socket, 1)
-      "ArrowLeft" -> navigate_photo(socket, -1)
-      "Escape" -> {:noreply, assign(socket, :selected_photo, nil)}
-      _ -> {:noreply, socket}
-    end
-  end
-
-  # Helper to switch photos
-  defp navigate_photo(socket, step) do
-    photos = socket.assigns.photos
-    current = socket.assigns.selected_photo
-
-    if current && length(photos) > 1 do
-      current_idx = Enum.find_index(photos, &(&1.id == current.id))
-      new_idx = Integer.mod(current_idx + step, length(photos))
-      {:noreply, assign(socket, :selected_photo, Enum.at(photos, new_idx))}
-    else
-      {:noreply, socket}
-    end
-  end
-
-  # --- UPLOAD HANDLERS ---
+  # --- EVENT HANDLERS (Grouped) ---
 
   @impl true
   def handle_event("validate", _params, socket) do
@@ -135,7 +90,6 @@ defmodule TrailChronicleWeb.RaceLive.Show do
       Racing.create_photo(%{race_id: race.id, image_path: url})
     end
 
-    # Reload photos from DB to ensure we have ID and timestamps
     updated_photos = Racing.list_race_photos(race.id)
 
     {:noreply,
@@ -143,13 +97,6 @@ defmodule TrailChronicleWeb.RaceLive.Show do
      |> assign(:photos, updated_photos)
      |> put_flash(:info, gettext("Memories saved!"))}
   end
-
-  defp ext(entry) do
-    [ext | _] = MIME.extensions(entry.client_type)
-    ext
-  end
-
-  # --- EXISTING HANDLERS ---
 
   @impl true
   def handle_event("delete", _params, socket) do
@@ -172,7 +119,57 @@ defmodule TrailChronicleWeb.RaceLive.Show do
     {:noreply, TrailChronicleWeb.LiveHelpers.handle_locale_switch(socket, locale)}
   end
 
+  # Lightbox
+  @impl true
+  def handle_event("open_lightbox", %{"id" => photo_id}, socket) do
+    photo = Enum.find(socket.assigns.photos, &(&1.id == photo_id))
+    {:noreply, assign(socket, :selected_photo, photo)}
+  end
+
+  @impl true
+  def handle_event("close_lightbox", _, socket) do
+    {:noreply, assign(socket, :selected_photo, nil)}
+  end
+
+  @impl true
+  def handle_event("next_photo", _, socket) do
+    navigate_photo(socket, 1)
+  end
+
+  @impl true
+  def handle_event("prev_photo", _, socket) do
+    navigate_photo(socket, -1)
+  end
+
+  @impl true
+  def handle_event("keydown", %{"key" => key}, socket) do
+    case key do
+      "ArrowRight" -> navigate_photo(socket, 1)
+      "ArrowLeft" -> navigate_photo(socket, -1)
+      "Escape" -> {:noreply, assign(socket, :selected_photo, nil)}
+      _ -> {:noreply, socket}
+    end
+  end
+
   # --- HELPERS ---
+
+  defp ext(entry) do
+    [ext | _] = MIME.extensions(entry.client_type)
+    ext
+  end
+
+  defp navigate_photo(socket, step) do
+    photos = socket.assigns.photos
+    current = socket.assigns.selected_photo
+
+    if current && length(photos) > 1 do
+      current_idx = Enum.find_index(photos, &(&1.id == current.id))
+      new_idx = Integer.mod(current_idx + step, length(photos))
+      {:noreply, assign(socket, :selected_photo, Enum.at(photos, new_idx))}
+    else
+      {:noreply, socket}
+    end
+  end
 
   defp format_time(nil), do: "—"
 

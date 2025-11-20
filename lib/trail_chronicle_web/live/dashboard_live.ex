@@ -29,16 +29,4 @@ defmodule TrailChronicleWeb.DashboardLive do
   def handle_event("switch-locale", %{"locale" => locale}, socket) do
     {:noreply, TrailChronicleWeb.LiveHelpers.handle_locale_switch(socket, locale)}
   end
-
-  defp format_time(nil), do: "—"
-
-  defp format_time(seconds) when is_integer(seconds) do
-    hours = div(seconds, 3600)
-    minutes = div(rem(seconds, 3600), 60)
-    secs = rem(seconds, 60)
-
-    "#{pad(hours)}:#{pad(minutes)}:#{pad(secs)}"
-  end
-
-  defp pad(num), do: String.pad_leading(to_string(num), 2, "0")
 end

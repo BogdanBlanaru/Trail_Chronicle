@@ -1,7 +1,7 @@
 defmodule TrailChronicleWeb.RaceLive.Form do
   use TrailChronicleWeb, :live_view
 
-  alias TrailChronicle.{Accounts, Racing}
+  alias TrailChronicle.{Racing}
   alias TrailChronicle.Racing.Race
 
   @impl true
