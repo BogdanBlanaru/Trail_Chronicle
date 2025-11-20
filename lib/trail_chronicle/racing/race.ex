@@ -64,6 +64,10 @@ defmodule TrailChronicle.Racing.Race do
     field :registration_deadline, :date
     field :is_registered, :boolean, default: false
 
+    # Maps to JSONB
+    field :route_data, {:array, :map}
+    has_many :photos, TrailChronicle.Racing.RacePhoto
+
     timestamps(type: :utc_datetime)
   end
 
@@ -118,7 +122,8 @@ defmodule TrailChronicle.Racing.Race do
       :registration_url,
       :cost_eur,
       :registration_deadline,
-      :is_registered
+      :is_registered,
+      :route_data
     ])
     |> validate_required([:athlete_id, :name, :race_date])
     |> validate_inclusion(:race_type, @race_types)

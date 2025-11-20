@@ -6,8 +6,10 @@ defmodule TrailChronicle.Racing do
   """
 
   import Ecto.Query, warn: false
+  import SweetXml
   alias TrailChronicle.Repo
   alias TrailChronicle.Racing.Race
+  alias TrailChronicle.Racing.RacePhoto
   alias TrailChronicle.Accounts.Athlete
 
   ## Race CRUD
@@ -397,5 +399,44 @@ defmodule TrailChronicle.Racing do
     end)
     |> Enum.filter(fn {_, race} -> race != nil end)
     |> Enum.into(%{})
+  end
+
+  def create_photo(attrs \\ %{}) do
+    %RacePhoto{}
+    |> RacePhoto.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def list_race_photos(race_id) do
+    RacePhoto
+    |> where([p], p.race_id == ^race_id)
+    |> order_by([p], desc: p.inserted_at)
+    |> Repo.all()
+  end
+
+  # --- GPX PARSING LOGIC ---
+
+  @doc """
+  Reads a local GPX file, extracts lat/lon points, and updates the race.
+  """
+  def update_race_gpx(race, gpx_file_path) do
+    # 1. Read File
+    case File.read(gpx_file_path) do
+      {:ok, xml_content} ->
+        # 2. Parse XML using SweetXml
+        # We extract trkpt (track points) lat and lon
+        points =
+          xml_content
+          |> xpath(~x"//trkpt"l, lat: ~x"./@lat"s, lon: ~x"./@lon"s)
+          |> Enum.map(fn %{lat: lat, lon: lon} ->
+            [String.to_float(lat), String.to_float(lon)]
+          end)
+
+        # 3. Save to DB
+        update_race(race, %{route_data: points, has_gpx: true})
+
+      _ ->
+        {:error, :invalid_file}
+    end
   end
 end

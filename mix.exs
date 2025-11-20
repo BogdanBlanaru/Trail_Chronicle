@@ -58,7 +58,8 @@ defmodule TrailChronicle.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
       {:bcrypt_elixir, "~> 3.0"},
-      {:bandit, "~> 1.5"}
+      {:bandit, "~> 1.5"},
+      {:sweet_xml, "~> 0.7"}
     ]
   end
 

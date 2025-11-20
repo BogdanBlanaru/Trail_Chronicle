@@ -149,51 +149,130 @@
         </div>
 
         <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-          <div class="p-8">
-            <h3 class="font-bold text-2xl text-slate-900 mb-6 flex items-center gap-2">
-              <span>📝</span> {gettext("Race Report")}
+          <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+            <h3 class="font-bold text-slate-900 flex items-center gap-2">
+              🗺️ {gettext("Route Map")}
             </h3>
-
-            <%= if @race.race_report do %>
-              <div class="prose prose-lg prose-slate max-w-none text-slate-600 leading-relaxed">
-                <p class="whitespace-pre-line">{@race.race_report}</p>
-              </div>
-            <% else %>
-              <div class="flex flex-col items-center justify-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                <p class="text-slate-400 font-medium italic">
-                  {gettext("No story written for this adventure yet.")}
-                </p>
-                <.link
-                  navigate={~p"/races/#{@race.id}/edit"}
-                  class="mt-3 text-sm font-bold text-blue-600 hover:text-blue-700 hover:underline"
-                >
-                  {gettext("Add your race report")}
-                </.link>
-              </div>
+            <%= if !@race.has_gpx do %>
+              <form phx-submit="save_gpx" phx-change="validate" class="flex items-center gap-2">
+                <label class="cursor-pointer bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-xs font-bold hover:bg-blue-100 transition">
+                  {gettext("Upload GPX")}
+                  <.live_file_input upload={@uploads.gpx} class="hidden" />
+                </label>
+                <button type="submit" class="hidden"></button>
+              </form>
             <% end %>
           </div>
 
+          <div class="relative h-[400px] bg-slate-100 w-full">
+            <%= if @race.route_data do %>
+              <div
+                id="race-map"
+                phx-hook="RaceMap"
+                data-route={Jason.encode!(@race.route_data)}
+                class="w-full h-full z-0"
+              >
+              </div>
+            <% else %>
+              <div class="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.5"
+                    d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0121 18.382V7.618a1 1 0 01-.553-.894L15 4m0 13V4m0 0L9 7"
+                  />
+                </svg>
+                <span>{gettext("No GPS route data available")}</span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+          <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+            <h3 class="font-bold text-slate-900 flex items-center gap-2">
+              📸 {gettext("Memories")}
+            </h3>
+
+            <form phx-submit="save_photos" phx-change="validate">
+              <label class="cursor-pointer bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-800 transition shadow-md">
+                + {gettext("Add Photos")}
+                <.live_file_input upload={@uploads.photos} class="hidden" />
+              </label>
+              <%= if @uploads.photos.entries != [] do %>
+                <button
+                  type="submit"
+                  class="ml-2 text-xs bg-green-500 text-white px-2 py-1 rounded"
+                >
+                  {gettext("Upload")}
+                </button>
+              <% end %>
+            </form>
+          </div>
+
+          <div class="p-6">
+            <%= if Enum.empty?(@photos) do %>
+              <p class="text-center text-slate-400 py-8 italic">
+                {gettext("No photos added yet. Drag and drop to upload!")}
+              </p>
+            <% else %>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <%= for photo <- @photos do %>
+                  <div class="relative aspect-square rounded-xl overflow-hidden group cursor-pointer">
+                    <img
+                      src={photo.image_path}
+                      class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors">
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+          <h3 class="font-bold text-2xl text-slate-900 mb-6 flex items-center gap-2">
+            <span>📝</span> {gettext("Race Report")}
+          </h3>
+
+          <%= if @race.race_report do %>
+            <div class="prose prose-lg prose-slate max-w-none text-slate-600 leading-relaxed">
+              <p class="whitespace-pre-line">{@race.race_report}</p>
+            </div>
+          <% else %>
+            <div class="flex flex-col items-center justify-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+              <p class="text-slate-400 font-medium italic">
+                {gettext("No story written for this adventure yet.")}
+              </p>
+              <.link
+                navigate={~p"/races/#{@race.id}/edit"}
+                class="mt-3 text-sm font-bold text-blue-600 hover:text-blue-700 hover:underline"
+              >
+                {gettext("Add your race report")}
+              </.link>
+            </div>
+          <% end %>
+
           <%= if @race.highlights || @race.difficulties do %>
-            <div class="grid grid-cols-1 md:grid-cols-2 border-t border-slate-100">
-              <div class="p-8 bg-amber-50/50 border-r border-slate-100">
-                <h4 class="font-bold text-amber-900 mb-3 flex items-center text-sm uppercase tracking-wider">
-                  <span class="w-2 h-2 rounded-full bg-amber-500 mr-2"></span> {gettext(
+            <div class="grid grid-cols-1 md:grid-cols-2 border-t border-slate-100 mt-8 pt-8">
+              <div class="p-4 bg-amber-50 rounded-xl mr-0 md:mr-4 mb-4 md:mb-0">
+                <h4 class="font-bold text-amber-900 mb-2 text-sm uppercase tracking-wider">
+                  <span class="w-2 h-2 rounded-full bg-amber-500 mr-2 inline-block"></span> {gettext(
                     "Highlights"
                   )}
                 </h4>
-                <p class="text-slate-700 italic">
-                  " {if @race.highlights, do: @race.highlights, else: "-"} "
-                </p>
+                <p class="text-slate-700 italic text-sm">{@race.highlights}</p>
               </div>
-              <div class="p-8 bg-rose-50/50">
-                <h4 class="font-bold text-rose-900 mb-3 flex items-center text-sm uppercase tracking-wider">
-                  <span class="w-2 h-2 rounded-full bg-rose-500 mr-2"></span> {gettext(
+              <div class="p-4 bg-rose-50 rounded-xl">
+                <h4 class="font-bold text-rose-900 mb-2 text-sm uppercase tracking-wider">
+                  <span class="w-2 h-2 rounded-full bg-rose-500 mr-2 inline-block"></span> {gettext(
                     "The Struggle"
                   )}
                 </h4>
-                <p class="text-slate-700 italic">
-                  " {if @race.difficulties, do: @race.difficulties, else: "-"} "
-                </p>
+                <p class="text-slate-700 italic text-sm">{@race.difficulties}</p>
               </div>
             </div>
           <% end %>
@@ -203,7 +282,6 @@
       <div class="space-y-6">
         <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
           <h3 class="font-bold text-lg text-slate-900 mb-6">{gettext("Performance Analysis")}</h3>
-
           <div class="space-y-6">
             <div>
               <div class="flex justify-between mb-1">
@@ -216,7 +294,6 @@
                 <div class="bg-blue-500 h-2 rounded-full" style="width: 60%"></div>
               </div>
             </div>
-
             <div class="grid grid-cols-2 gap-4 pt-2">
               <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <p class="text-xs text-slate-400 font-bold uppercase">{gettext("Overall")}</p>
@@ -239,7 +316,6 @@
 
         <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
           <h3 class="font-bold text-lg text-slate-900 mb-6">{gettext("Conditions")}</h3>
-
           <div class="space-y-4">
             <div class="flex items-center justify-between pb-4 border-b border-slate-50">
               <span class="text-slate-500 text-sm">{gettext("Difficulty")}</span>

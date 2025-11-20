@@ -58,6 +58,10 @@ config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
+config :mime, :types, %{
+  "application/gpx+xml" => ["gpx"]
+}
+
 # Configures Gettext
 config :trail_chronicle, TrailChronicleWeb.Gettext,
   default_locale: "en",

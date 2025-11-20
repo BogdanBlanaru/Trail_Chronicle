@@ -22,10 +22,36 @@ import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import topbar from "../vendor/topbar"
 
+let Hooks = {}
+
+Hooks.RaceMap = {
+  mounted() {
+    // 1. Get Data from HTML attribute
+    const routeData = JSON.parse(this.el.dataset.route);
+    
+    if (routeData && routeData.length > 0) {
+      // 2. Initialize Map
+      this.map = L.map(this.el.id).setView(routeData[0], 13);
+
+      // 3. Add Tile Layer (OpenStreetMap)
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(this.map);
+
+      // 4. Draw Polyline
+      const polyline = L.polyline(routeData, {color: '#2563eb', weight: 4}).addTo(this.map);
+      
+      // 5. Zoom map to fit the route
+      this.map.fitBounds(polyline.getBounds());
+    }
+  }
+}
+
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
-  params: {_csrf_token: csrfToken}
+  params: {_csrf_token: csrfToken},
+  hooks: Hooks
 })
 
 // Show progress bar on live navigation and form submits
