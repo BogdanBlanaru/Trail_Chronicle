@@ -14,9 +14,20 @@ defmodule TrailChronicleWeb.RaceLive.Show do
         if race.athlete_id == athlete.id do
           photos = Racing.list_race_photos(race.id)
 
+          parsed_insight =
+            if race.ai_insight do
+              case Jason.decode(race.ai_insight) do
+                {:ok, map} -> map
+                _ -> nil
+              end
+            else
+              nil
+            end
+
           {:ok,
            socket
            |> assign(:race, race)
+           |> assign(:ai_insight, parsed_insight)
            |> assign(:photos, photos)
            |> assign(:selected_photo, nil)
            |> assign(:map_lightbox, false)
@@ -190,9 +201,12 @@ defmodule TrailChronicleWeb.RaceLive.Show do
   def handle_info(:run_ai_analysis, socket) do
     case Racing.save_ai_insight(socket.assigns.race) do
       {:ok, updated_race} ->
+        {:ok, parsed} = Jason.decode(updated_race.ai_insight)
+
         {:noreply,
          socket
          |> assign(:race, updated_race)
+         |> assign(:ai_insight, parsed)
          |> assign(:ai_loading, false)
          |> put_flash(:info, gettext("Analysis complete!"))}
 

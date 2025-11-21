@@ -527,15 +527,18 @@ defmodule TrailChronicle.Racing do
   # --- AI OPERATIONS ---
 
   def save_ai_insight(%Race{} = race) do
-    # 1. Generate (Simulated or Real)
-    # Preload shoe to give the AI context about gear
     race = Repo.preload(race, :shoe)
-    insight = Coach.generate_analysis(race)
 
-    # 2. Save to DB
+    # Get the Map from the Coach
+    insight_map = Coach.generate_analysis(race)
+
+    # Convert Map -> JSON String
+    {:ok, json_string} = Jason.encode(insight_map)
+
     race
     |> Race.changeset(%{
-      ai_insight: insight,
+      # Save as JSON string
+      ai_insight: json_string,
       ai_generated_at: DateTime.utc_now()
     })
     |> Repo.update()
