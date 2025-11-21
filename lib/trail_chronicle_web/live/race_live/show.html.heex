@@ -268,6 +268,7 @@
             <%= if @race.route_data do %>
               <div
                 id="race-map"
+                phx-update="ignore"
                 phx-hook="RaceMap"
                 data-route={Jason.encode!(@race.route_data)}
                 class="w-full h-full z-0"
@@ -622,10 +623,10 @@
   <% end %>
 
   <%= if @map_lightbox do %>
-    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm animate-fade-in">
+    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/95 backdrop-blur-md animate-fade-in p-4 md:p-8">
       <button
         phx-click="close_map_lightbox"
-        class="absolute top-6 right-6 text-white/70 hover:text-white p-2 rounded-full bg-white/10 hover:bg-white/20 transition z-[110]"
+        class="absolute top-4 right-4 text-white/70 hover:text-white p-2 rounded-full bg-white/10 hover:bg-white/20 transition z-[110]"
       >
         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -637,21 +638,77 @@
         </svg>
       </button>
 
-      <div class="w-full h-full p-4 md:p-10 flex flex-col">
-        <h2 class="text-white text-2xl font-bold mb-4 flex items-center gap-3">
-          {@race.name}
-          <span class="text-sm font-normal bg-white/20 px-2 py-0.5 rounded-md text-white/80">
-            {@race.distance_km}km • {@race.elevation_gain_m}m+
-          </span>
-        </h2>
+      <div class="w-full h-full max-w-7xl flex flex-col bg-white rounded-2xl overflow-hidden shadow-2xl">
+        <div class="bg-slate-900 px-6 py-4 flex items-center justify-between shrink-0">
+          <div>
+            <h2 class="text-white text-xl font-bold flex items-center gap-3">
+              {@race.name}
+              <span class="text-xs font-normal bg-blue-600/20 border border-blue-500/30 px-2 py-0.5 rounded-md text-blue-100">
+                {if @race.race_type, do: String.capitalize(@race.race_type), else: "Race"}
+              </span>
+            </h2>
+            <div class="text-slate-400 text-xs mt-1 flex gap-3">
+              <span>📏 {@race.distance_km}km</span>
+              <span>⛰️ {@race.elevation_gain_m}m+</span>
+            </div>
+          </div>
+        </div>
 
-        <div
-          id="race-map-expanded"
-          phx-hook="RaceMap"
-          data-route={Jason.encode!(@race.route_data)}
-          data-expanded="true"
-          class="flex-1 w-full bg-slate-100 rounded-xl overflow-hidden shadow-2xl"
-        >
+        <div class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+          <div class="flex-grow relative h-[60%] md:h-full md:w-[70%]">
+            <div
+              id="race-map-expanded"
+              phx-update="ignore"
+              phx-hook="RaceMap"
+              data-route={Jason.encode!(@race.route_data)}
+              data-expanded="true"
+              class="absolute inset-0 w-full h-full z-0"
+            >
+            </div>
+          </div>
+
+          <div class="h-[40%] md:h-full md:w-[30%] bg-white border-t md:border-t-0 md:border-l border-slate-200 flex flex-col z-10">
+            <div class="p-4 border-b border-slate-100 bg-slate-50/50">
+              <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">
+                Elevation Profile
+              </h3>
+            </div>
+
+            <div class="flex-1 p-4 relative min-h-[200px]">
+              <canvas id="elevation-chart"></canvas>
+            </div>
+
+            <div class="p-6 bg-slate-50 border-t border-slate-100 grid grid-cols-2 gap-4">
+              <div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Max Elevation</p>
+                <p class="text-lg font-bold text-slate-900">
+                  <% # FIX: Handle both 2D and 3D coordinates safely to prevent crashing
+                  coords = @race.route_data["coordinates"]
+
+                  max_ele =
+                    if coords do
+                      Enum.reduce(coords, 0, fn
+                        [_, _, e], acc -> max(e, acc)
+                        # Handle 2D coordinates (0 ele)
+                        _, acc -> acc
+                      end)
+                    else
+                      0
+                    end %>
+                  {max_ele}m
+                </p>
+              </div>
+              <div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Avg Gradient</p>
+                <p class="text-lg font-bold text-slate-900">
+                  <% dist = Decimal.to_float(@race.distance_km || Decimal.new(1)) %>
+                  {if dist > 0,
+                    do: Float.round((@race.elevation_gain_m || 0) / (dist * 1000) * 100, 1),
+                    else: 0}%
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

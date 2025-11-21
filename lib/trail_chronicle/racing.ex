@@ -279,7 +279,14 @@ defmodule TrailChronicle.Racing do
           dist_km = total_dist / 1000.0
 
           route_wrapper = %{
-            "coordinates" => Enum.map(points, fn p -> [p.lat, p.lon] end)
+            "coordinates" =>
+              Enum.map(points, fn p ->
+                [
+                  Float.round(p.lat, 5),
+                  Float.round(p.lon, 5),
+                  Float.round(p.ele || 0.0, 1)
+                ]
+              end)
           }
 
           # Logic: Only overwrite stats for upcoming races.
