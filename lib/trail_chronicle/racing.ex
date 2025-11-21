@@ -236,10 +236,8 @@ defmodule TrailChronicle.Racing do
   def update_race_gpx(race, gpx_file_path) do
     case File.read(gpx_file_path) do
       {:ok, raw_content} ->
-        # 1. Sanitize XML (Remove namespaces aggressively)
         xml_content = sanitize_xml(raw_content)
 
-        # 2. Parse Points
         points =
           xml_content
           |> xpath(
@@ -255,24 +253,19 @@ defmodule TrailChronicle.Racing do
               ele: parse_float(ele)
             }
           end)
-          # Filter out points where parsing failed (0.0 lat/lon is unlikely valid)
           |> Enum.filter(fn p -> p.lat != 0.0 and p.lon != 0.0 end)
 
         if length(points) > 1 do
-          # 3. Calculate Stats
           {total_dist, total_gain, total_loss} = calculate_track_stats(points)
           dist_km = total_dist / 1000.0
 
-          # 4. Format for Map
           route_wrapper = %{
             "coordinates" => Enum.map(points, fn p -> [p.lat, p.lon] end)
           }
 
-          # 5. Auto-Calculate Difficulty
           climb_ratio = if dist_km > 0, do: total_gain / dist_km, else: 0
           difficulty = calculate_difficulty(climb_ratio)
 
-          # 6. Smart Description
           smart_report =
             if is_nil(race.race_report) or race.race_report == "" do
               generate_smart_description(dist_km, total_gain, climb_ratio)
@@ -280,7 +273,6 @@ defmodule TrailChronicle.Racing do
               race.race_report
             end
 
-          # 7. Update
           update_race(race, %{
             route_data: route_wrapper,
             has_gpx: true,
@@ -299,10 +291,19 @@ defmodule TrailChronicle.Racing do
     end
   end
 
+  # NEW: Function to remove GPX data
+  def delete_race_gpx(%Race{} = race) do
+    update_race(race, %{
+      route_data: nil,
+      has_gpx: false
+      # Note: We intentionally do NOT reset distance/elevation stats
+      # because the user might want to keep them manually even if they remove the map.
+    })
+  end
+
   # --- HELPERS ---
 
   defp sanitize_xml(content) do
-    # Remove XML declaration and namespaces to ensure SweetXml finds tags easily
     content
     |> String.replace(~r/<\?xml.*\?>/, "")
     |> String.replace(~r/xmlns="[^"]*"/, "")
@@ -318,7 +319,6 @@ defmodule TrailChronicle.Racing do
         num
 
       :error ->
-        # Fallback for Integers like "592"
         case Integer.parse(val) do
           {int_num, _} -> int_num / 1.0
           :error -> 0.0
@@ -329,42 +329,25 @@ defmodule TrailChronicle.Racing do
   defp parse_float(_), do: 0.0
 
   defp calculate_track_stats(points) do
-    # Threshold: 3 meters vertical to count as "gain".
-    # This filters out GPS noise (1m up, 1m down jitter).
     threshold = 3.0
 
     {_, dist, gain, loss, _ref_ele} =
       Enum.reduce(points, {nil, 0.0, 0.0, 0.0, nil}, fn point, {prev, d, g, l, ref_ele} ->
         if prev do
-          # Distance is always accumulated
           new_dist = d + distance_between(prev, point)
-
-          # Elevation Logic
           current_ele = point.ele
-
-          # If no reference elevation yet, set it
           ref = if ref_ele, do: ref_ele, else: prev.ele
-
           diff = current_ele - ref
 
           {new_g, new_l, new_ref} =
             cond do
-              # Significant Climb (> 3m)
-              diff > threshold ->
-                {g + diff, l, current_ele}
-
-              # Significant Descent (> 3m)
-              diff < -threshold ->
-                {g, l + abs(diff), current_ele}
-
-              # Noise (change < 3m) -> Ignore change, keep old ref
-              true ->
-                {g, l, ref}
+              diff > threshold -> {g + diff, l, current_ele}
+              diff < -threshold -> {g, l + abs(diff), current_ele}
+              true -> {g, l, ref}
             end
 
           {point, new_dist, new_g, new_l, new_ref}
         else
-          # First point
           {point, 0.0, 0.0, 0.0, point.ele}
         end
       end)
@@ -404,7 +387,6 @@ defmodule TrailChronicle.Racing do
   defp distance_between(p1, p2) do
     rad = :math.pi() / 180
     r = 6_371_000
-
     d_lat = (p2.lat - p1.lat) * rad
     d_lon = (p2.lon - p1.lon) * rad
 

@@ -1,7 +1,7 @@
 defmodule TrailChronicleWeb.RaceLive.Show do
   use TrailChronicleWeb, :live_view
 
-  alias TrailChronicle.{Racing}
+  alias TrailChronicle.{Accounts, Racing}
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
@@ -42,7 +42,7 @@ defmodule TrailChronicleWeb.RaceLive.Show do
     end
   end
 
-  # --- EVENT HANDLERS (Grouped) ---
+  # --- EVENT HANDLERS ---
 
   @impl true
   def handle_event("validate", _params, socket) do
@@ -53,22 +53,21 @@ defmodule TrailChronicleWeb.RaceLive.Show do
   def handle_event("save_gpx", _params, socket) do
     race = socket.assigns.race
 
-    # Consume the uploaded file
     results =
       consume_uploaded_entries(socket, :gpx, fn %{path: path}, _entry ->
         case Racing.update_race_gpx(race, path) do
           {:ok, updated_race} -> {:ok, updated_race}
-          {:error, reason} -> {:error, reason}
+          {:error, _reason} -> {:ok, nil}
         end
       end)
 
     case List.first(results) do
       %TrailChronicle.Racing.Race{} = updated_race ->
-        # PUSH EVENT to JS hook
         {:noreply,
          socket
-         |> put_flash(:info, gettext("Route analyzed! Distance and Elevation updated."))
+         |> put_flash(:info, gettext("Route analyzed! Stats updated."))
          |> assign(:race, updated_race)
+         # Push event to JS hook to re-init map immediately
          |> push_event("init_map", %{route: updated_race.route_data})}
 
       _ ->
@@ -76,11 +75,24 @@ defmodule TrailChronicleWeb.RaceLive.Show do
     end
   end
 
+  # NEW: Delete Handler
+  @impl true
+  def handle_event("delete_gpx", _params, socket) do
+    case Racing.delete_race_gpx(socket.assigns.race) do
+      {:ok, updated_race} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, gettext("Route removed successfully."))
+         |> assign(:race, updated_race)}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, gettext("Could not remove route."))}
+    end
+  end
+
   @impl true
   def handle_event("save_photos", _params, socket) do
     race = socket.assigns.race
-
-    # Ensure directory exists
     upload_dir = Path.join(["priv", "static", "uploads"])
     File.mkdir_p!(upload_dir)
 
@@ -124,7 +136,6 @@ defmodule TrailChronicleWeb.RaceLive.Show do
     {:noreply, TrailChronicleWeb.LiveHelpers.handle_locale_switch(socket, locale)}
   end
 
-  # Lightbox
   @impl true
   def handle_event("open_lightbox", %{"id" => photo_id}, socket) do
     photo = Enum.find(socket.assigns.photos, &(&1.id == photo_id))

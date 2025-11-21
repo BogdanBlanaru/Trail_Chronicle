@@ -2,243 +2,215 @@ alias TrailChronicle.{Repo, Accounts, Racing}
 
 IO.puts("\n🌱 Starting seed data generation...\n")
 
-# Clear existing data
+# 1. Clear existing data
 IO.puts("🗑️  Clearing existing races...")
 Repo.delete_all(Racing.Race)
 
 IO.puts("🗑️  Clearing existing athletes...")
 Repo.delete_all(Accounts.Athlete)
 
-# Create the main athlete (Bogdan)
-IO.puts("👤 Creating athlete: Bogdan Marinescu...")
+# 2. Create the main athlete
+IO.puts("👤 Creating athlete: Bogdan Blanaru...")
 
-# Step 1: Register (Basic Auth) - Password must be > 12 chars
-{:ok, bogdan} =
+{:ok, athlete} =
   Accounts.register_athlete(%{
-    "email" => "bogdan@example.com",
-    "password" => "SecretPassword123!",
+    "email" => "bogdan.blanaru97@gmail.com",
+    "password" => "H0YoUM7Lc5r2DwV.",
     "first_name" => "Bogdan",
-    "last_name" => "Marinescu",
+    "last_name" => "Blanaru",
     "preferred_language" => "ro"
   })
 
-# Step 2: Update Profile (Details)
-{:ok, bogdan} =
-  Accounts.update_athlete_profile(bogdan, %{
+{:ok, athlete} =
+  Accounts.update_athlete_profile(athlete, %{
     "bio" =>
-      "Trail runner from Romania passionate about mountain races and ultra marathons. Love pushing my limits in the mountains!",
-    "date_of_birth" => "1995-06-15",
+      "Trail runner passionate about pushing limits. Tracking my journey from evening runs to ultra marathons.",
     "gender" => "M",
     "country" => "Romania",
     "city" => "Brașov",
     "height_cm" => 180,
     "weight_kg" => 75,
-    "running_since_year" => 2018,
+    "running_since_year" => 2020,
     "favorite_distance" => "ultra",
-    "max_heart_rate" => 190,
-    "resting_heart_rate" => 48,
     "preferred_unit_system" => "metric",
     "timezone" => "Europe/Bucharest"
   })
 
-IO.puts("✅ Athlete created: #{bogdan.email}\n")
+IO.puts("✅ Athlete created: #{athlete.email}\n")
 
-# Sample races data
-races_data = [
-  # Completed races - 2024
-  %{
-    "name" => "Retezat Sky Race 2024",
-    "race_date" => "2024-08-17",
-    "race_type" => "ultra",
-    "status" => "completed",
-    "country" => "Romania",
-    "city" => "Cârnița",
-    "latitude" => 45.3566,
-    "longitude" => 22.8899,
-    "distance_km" => 42,
-    "elevation_gain_m" => 3200,
-    "elevation_loss_m" => 3200,
-    "finish_time_seconds" => 28800,
-    "overall_position" => 45,
-    "total_participants" => 120,
-    "surface_type" => "trail",
-    "terrain_difficulty" => 5,
-    "weather_conditions" => "Sunny, hot",
-    "temperature_celsius" => 28,
-    "race_report" =>
-      "Amazing race through Retezat mountains! The climbs were brutal but the views were worth it. My legs were destroyed by the technical descents but I pushed through. The high altitude sections were challenging.",
-    "highlights" =>
-      "Summit of Peleaga peak at sunrise, crystal clear mountain lakes, amazing single tracks through alpine meadows, saw a chamois near the ridge",
-    "difficulties" =>
-      "Very steep climbs in the middle section, some snow patches near the ridges, ran out of water between aid stations",
-    "gear_used" => "Salomon Speedcross 5, Black Diamond poles, Salomon vest, Maurten gels"
-  },
-  %{
-    "name" => "București Marathon 2024",
-    "race_date" => "2024-10-13",
-    "race_type" => "marathon",
-    "status" => "completed",
-    "country" => "Romania",
-    "city" => "București",
-    "distance_km" => 42.195,
-    "elevation_gain_m" => 150,
-    "finish_time_seconds" => 14400,
-    "overall_position" => 234,
-    "total_participants" => 3500,
-    "surface_type" => "asphalt",
-    "terrain_difficulty" => 1,
-    "weather_conditions" => "Cloudy, perfect running weather",
-    "temperature_celsius" => 15,
-    "race_report" =>
-      "My first road marathon! Much faster than trail races. The flat course helped me maintain a steady pace throughout. Great crowd support in the city center.",
-    "highlights" =>
-      "Running through the city center with huge crowd support, personal best time on road, perfect weather conditions",
-    "difficulties" =>
-      "Hip flexors started hurting around km 35, not used to running on asphalt for so long",
-    "gear_used" => "Nike Vaporfly, Nathan hydration belt, energy gels every 5km"
-  },
-  %{
-    "name" => "Piatra Craiului Marathon 2024",
-    "race_date" => "2024-07-06",
-    "race_type" => "trail",
-    "status" => "completed",
-    "country" => "Romania",
-    "city" => "Zărnești",
-    "latitude" => 45.5697,
-    "longitude" => 25.3336,
-    "distance_km" => 42,
-    "elevation_gain_m" => 2800,
-    "elevation_loss_m" => 2800,
-    "finish_time_seconds" => 25200,
-    "overall_position" => 28,
-    "total_participants" => 85,
-    "surface_type" => "trail",
-    "terrain_difficulty" => 4,
-    "weather_conditions" => "Partly cloudy, ideal",
-    "temperature_celsius" => 22,
-    "race_report" =>
-      "Technical and challenging course through Piatra Craiului massif. The ridge sections were absolutely spectacular. Some scrambling required which slowed me down but was fun!",
-    "highlights" =>
-      "Running the ridge with 360-degree views, wild flowers everywhere, supportive local crowd at aid stations",
-    "difficulties" =>
-      "Technical rocky sections required careful foot placement, some exposed ridge sections with wind",
-    "gear_used" => "La Sportiva Bushido II, Black Diamond poles, Ultimate Direction vest"
-  },
-  %{
-    "name" => "Semimaraton Brașov 2024",
-    "race_date" => "2024-05-19",
-    "race_type" => "half_marathon",
-    "status" => "completed",
-    "country" => "Romania",
-    "city" => "Brașov",
-    "distance_km" => 21.1,
-    "elevation_gain_m" => 180,
-    "finish_time_seconds" => 6900,
-    "overall_position" => 87,
-    "total_participants" => 1200,
-    "surface_type" => "asphalt",
-    "terrain_difficulty" => 1,
-    "weather_conditions" => "Light rain",
-    "temperature_celsius" => 12,
-    "race_report" =>
-      "Local race in my hometown! Great atmosphere, ran with some friends. The rain made it a bit challenging but also kept us cool. Finished strong.",
-    "highlights" =>
-      "Running past familiar landmarks, friends and family cheering, good time despite the rain",
-    "difficulties" => "Slippery conditions from rain, had to be careful on turns",
-    "gear_used" => "Hoka Clifton 8, light rain jacket"
-  },
-  # Upcoming races - 2026
-  %{
-    "name" => "Făgăraș Ultra 2026",
-    "race_date" => "2026-08-15",
-    "race_type" => "ultra",
-    "status" => "upcoming",
-    "country" => "Romania",
-    "city" => "Victoria",
-    "latitude" => 45.7167,
-    "longitude" => 24.7167,
-    "distance_km" => 80,
-    "elevation_gain_m" => 5000,
-    "surface_type" => "trail",
-    "terrain_difficulty" => 5,
-    "official_website" => "https://fagaras-ultra.ro",
-    "cost_eur" => 250,
-    "registration_deadline" => "2026-07-01",
-    "is_registered" => true
-  },
-  %{
-    "name" => "UTMB Mont-Blanc 2026",
-    "race_date" => "2026-08-28",
-    "race_type" => "ultra",
-    "status" => "upcoming",
-    "country" => "France",
-    "city" => "Chamonix",
-    "latitude" => 45.9237,
-    "longitude" => 6.8694,
-    "distance_km" => 171,
-    "elevation_gain_m" => 10000,
-    "surface_type" => "trail",
-    "terrain_difficulty" => 5,
-    "official_website" => "https://utmb.world",
-    "cost_eur" => 380,
-    "registration_deadline" => "2026-07-15",
-    "is_registered" => true
-  },
-  %{
-    "name" => "Bucegi Marathon 2026",
-    "race_date" => "2026-07-12",
-    "race_type" => "marathon",
-    "status" => "upcoming",
-    "country" => "Romania",
-    "city" => "Bușteni",
-    "latitude" => 45.4166,
-    "longitude" => 25.5397,
-    "distance_km" => 42.195,
-    "elevation_gain_m" => 2100,
-    "surface_type" => "trail",
-    "terrain_difficulty" => 4,
-    "official_website" => "https://bucegi-marathon.ro",
-    "cost_eur" => 150,
-    "registration_deadline" => "2026-06-30",
-    "is_registered" => true
-  }
+# 3. Define Helper Logic for Importing
+# This function maps raw CSV data to our Schema logic
+classify_race = fn name, dist, elev ->
+  name_lower = String.downcase(name)
+
+  # Determine Type based on distance and name
+  type =
+    cond do
+      dist >= 43.0 -> "ultra"
+      dist >= 42.0 -> "marathon"
+      dist >= 21.0 -> "half_marathon"
+      String.contains?(name_lower, "cross") or String.contains?(name_lower, "cros") -> "10k"
+      dist >= 9.5 and dist <= 10.5 -> "10k"
+      dist >= 4.5 and dist <= 5.5 -> "5k"
+      # Default for others
+      true -> "trail"
+    end
+
+  # Determine Surface based on elevation/distance ratio or keywords
+  # If > 20m elevation per km, likely trail
+  climb_ratio = if dist > 0, do: elev / dist, else: 0
+
+  surface =
+    if climb_ratio > 20 or String.contains?(name_lower, "trail") or
+         String.contains?(name_lower, "mountain"),
+       do: "trail",
+       else: "asphalt"
+
+  # Determine Difficulty
+  difficulty =
+    cond do
+      climb_ratio < 10 -> 1
+      climb_ratio < 25 -> 2
+      climb_ratio < 40 -> 3
+      climb_ratio < 60 -> 4
+      true -> 5
+    end
+
+  # Is it a "Real Race" or Training?
+  # We assume anything with a specific name is a race, generic names are training
+  is_race =
+    String.match?(name, ~r/(Marathon|Semimaraton|Trail|Race|Cros|X3|Festival|RunIasi|Up to)/i)
+
+  # We map "Training" runs to "other" or "trail" to keep them in the system but distinct
+  final_type = if is_race, do: type, else: "other"
+
+  {final_type, surface, difficulty, is_race}
+end
+
+# 4. The Data (Extracted from your Strava CSV)
+# Only "Run" activities included. Hikes/Weights removed.
+raw_activities = [
+  # Format: {Name, DateString, TimeSeconds, DistKm, ElevM, City}
+  {"Evening Run", "2024-03-14", 4929, 11.56, 15, "Brașov"},
+  {"Evening Run", "2024-03-17", 7035, 15.99, 29, "Brașov"},
+  {"Evening Run", "2024-03-24", 4247, 11.11, 103, "Brașov"},
+  {"Evening Run", "2024-03-25", 9429, 20.82, 50, "Brașov"},
+  {"Afternoon Run", "2024-04-20", 7596, 16.98, 120, "Brașov"},
+  {"Afternoon Run", "2024-04-21", 4902, 12.77, 235, "Brașov"},
+  {"42 hours fasting run", "2024-04-23", 2773, 6.33, 9, "Brașov"},
+  {"Evening Run", "2024-04-25", 3139, 8.56, 12, "Brașov"},
+  {"Afternoon Run", "2024-05-01", 12843, 28.30, 121, "Brașov"},
+  {"Evening Run", "2024-05-07", 3488, 10.00, 52, "Brașov"},
+  {"Evening Run", "2024-05-09", 6766, 17.21, 87, "Brașov"},
+  {"Evening Run", "2024-05-25", 2083, 4.01, 9, "Brașov"},
+  {"Afternoon Run", "2024-05-31", 2515, 5.01, 65, "Brașov"},
+  {"Brașov semimaraton", "2024-06-01", 16318, 23.68, 1089, "Brașov"},
+  {"Evening Run", "2024-06-06", 4061, 11.08, 206, "Brașov"},
+  {"Evening Run", "2024-06-08", 4179, 8.41, 95, "Brașov"},
+  {"Evening Run", "2024-06-11", 2594, 6.81, 3, "Brașov"},
+  {"Night Run", "2024-07-02", 6832, 16.62, 12, "Brașov"},
+  {"Evening Run", "2024-07-08", 2159, 5.64, 5, "Brașov"},
+  {"Night Run", "2024-07-13", 3758, 10.00, 3, "Brașov"},
+  {"Bucovina Rumble Rocks", "2024-07-28", 11127, 18.80, 616, "Vatra Dornei"},
+  {"Evening Run", "2024-08-13", 5765, 13.62, 6, "Brașov"},
+  {"Evening Run", "2024-08-27", 3186, 6.39, 15, "Brașov"},
+  {"Evening Run", "2024-08-28", 4107, 10.21, 16, "Brașov"},
+  {"Evening Run", "2024-09-06", 2534, 3.76, 73, "Brașov"},
+  {"Ciucaș X3 2024", "2024-09-08", 12392, 20.93, 1290, "Cheia"},
+  {"Crosul Arenelor 2024", "2024-09-22", 3351, 10.09, 8, "București"},
+  {"Bimbo race 5k", "2024-09-29", 1567, 4.57, 88, "Brașov"},
+  {"Lunch Run", "2024-09-29", 3135, 8.28, 31, "Brașov"},
+  {"Azuga Trail Run 2024", "2024-10-19", 10808, 21.11, 1199, "Azuga"},
+  {"Evening Run", "2025-01-28", 6458, 15.59, 85, "Brașov"},
+  {"Evening Run", "2025-04-14", 14143, 26.27, 258, "Brașov"},
+  {"Evening Run", "2025-04-24", 4033, 10.34, 102, "Brașov"},
+  {"Evening Run", "2025-04-25", 3374, 4.48, 7, "Brașov"},
+  {"Semimaraton Iasi 2025", "2025-04-27", 7947, 21.41, 282, "Iași"},
+  {"Evening Run", "2025-04-28", 3135, 5.08, 27, "Brașov"},
+  {"Afternoon Run", "2025-05-01", 9126, 9.25, 126, "Brașov"},
+  {"Afternoon Run", "2025-05-04", 6507, 10.10, 432, "Brașov"},
+  {"Subcarpați Trail Run 2025", "2025-05-10", 11952, 23.93, 1008, "Câmpina"},
+  {"Evening Run", "2025-05-14", 5592, 10.01, 662, "Brașov"},
+  {"EcoRun Moieciu 2025", "2025-05-17", 6441, 13.92, 640, "Moieciu"},
+  {"Evening Run", "2025-05-20", 9049, 18.29, 121, "Brașov"},
+  {"Semimaraton Casa Bună Sânpetru 2025", "2025-05-24", 9881, 20.77, 901, "Sânpetru"},
+  {"Brașov Marathon Semimaraton 2025", "2025-05-31", 10534, 22.23, 1111, "Brașov"},
+  {"Evening Run", "2025-06-04", 3298, 7.25, 52, "Brașov"},
+  {"Festivalul sporturilor Iași 11km 2025", "2025-06-07", 7661, 10.88, 360, "Iași"},
+  {"Evening Run", "2025-06-12", 9849, 25.01, 283, "Brașov"},
+  {"Morning Run", "2025-06-15", 1806, 3.48, 24, "Brașov"},
+  {"Evening Run", "2025-06-24", 9668, 17.78, 950, "Brașov"},
+  {"Carpathia trails 36km & 2000m 2025", "2025-07-05", 22154, 35.79, 2099, "Cheile Grădiștei"},
+  {"Morning Run", "2025-07-06", 4632, 8.70, 536, "Brașov"},
+  {"Evening Run", "2025-07-08", 5701, 15.20, 243, "Brașov"},
+  {"Evening Run", "2025-07-18", 3620, 10.00, 72, "Brașov"},
+  {"Up to Postăvaru Race 2025", "2025-07-20", 6016, 12.07, 796, "Brașov"},
+  {"Morning Run", "2025-07-25", 6852, 4.80, 573, "Brașov"},
+  {"Bucovina Ultra Rocks Radical 21km 2025", "2025-07-26", 11420, 21.51, 1166,
+   "Câmpulung Moldovenesc"},
+  {"Morning Run", "2025-08-17", 5766, 15.06, 95, "Brașov"},
+  {"Lunch Run", "2025-08-23", 11196, 20.00, 1085, "Brașov"},
+  {"Lunch Run", "2025-08-24", 5510, 6.48, 664, "Brașov"},
+  {"Râșnov Medieval Run 2025", "2025-08-30", 12068, 24.82, 1047, "Râșnov"},
+  {"Evening Run", "2025-09-04", 6984, 13.39, 194, "Brașov"},
+  {"Ciucaș X3 21 km 2025", "2025-09-07", 11279, 21.09, 1283, "Cheia"},
+  {"Evening Run", "2025-09-10", 6506, 15.28, 113, "Brașov"},
+  {"Sighișoara 10k 2025", "2025-09-14", 3094, 9.38, 161, "Sighișoara"},
+  {"Omu Marathon 2025", "2025-09-20", 32092, 41.75, 3171, "Bușteni"},
+  {"Evening Run", "2025-09-25", 3884, 10.14, 48, "Brașov"},
+  {"Evening Run", "2025-09-29", 3956, 10.31, 39, "Brașov"},
+  {"Brașov Running Festival - TrailToRoad 12k", "2025-10-04", 4277, 11.21, 272, "Brașov"},
+  {"Brașov Running Festival 10k 2025", "2025-10-05", 3112, 10.04, 17, "Brașov"},
+  {"Bucharest Marathon 2025", "2025-10-12", 15784, 42.30, 136, "București"},
+  {"Azuga Trail Race 2025", "2025-10-18", 10489, 21.15, 1198, "Azuga"},
+  {"Evening Run", "2025-10-23", 4150, 12.66, 165, "Brașov"},
+  {"Brașov Marathon - Night Challenge 2025", "2025-10-25", 2982, 7.13, 369, "Brașov"},
+  {"RunIasi 2025", "2025-10-26", 5204, 10.08, 169, "Iași"},
+  {"Evening Run", "2025-10-30", 4241, 11.05, 33, "Brașov"},
+  {"Băneasa Forest Run 21k 2025", "2025-11-02", 7449, 21.29, 42, "București"},
+  {"Măgurele Running Trails 22k 2025", "2025-11-09", 7459, 21.88, 42, "Măgurele"},
+  {"Crosul 15 noiembrie 2025", "2025-11-15", 1768, 5.03, 16, "Brașov"},
+  {"Morning Run", "2025-11-16", 6229, 15.20, 213, "Brașov"}
 ]
 
-# Insert races
-IO.puts("🏃 Creating #{length(races_data)} races...\n")
+IO.puts("🏃 Importing #{length(raw_activities)} activities...")
 
-Enum.each(races_data, fn race_data ->
-  case Racing.create_race(bogdan, race_data) do
-    {:ok, race} ->
-      status_emoji =
-        case race.status do
-          "completed" -> "✅"
-          "upcoming" -> "📅"
-          _ -> "⏳"
-        end
+Enum.each(raw_activities, fn {name, date_str, time, dist, elev, city} ->
+  {type, surface, difficulty, _is_race} = classify_race.(name, dist, elev)
 
-      IO.puts("#{status_emoji} #{race.name} - #{race.race_date}")
+  # Set status to "completed" since these are from history
+  # We define a race "report" automatically based on data to make it look nice
+  report =
+    if type == "other" do
+      "Training run in #{city}."
+    else
+      "Race day! Covered #{dist}km with #{elev}m elevation gain. " <>
+        if(elev > 1000, do: "Tough climbing today!", else: "Good pace.")
+    end
 
-    {:error, changeset} ->
-      IO.puts("❌ Failed to create race: #{race_data["name"]}")
-      IO.inspect(changeset.errors)
-  end
+  Racing.create_race(athlete, %{
+    "name" => name,
+    "race_date" => Date.from_iso8601!(date_str),
+    "race_type" => type,
+    "status" => "completed",
+    "country" => "Romania",
+    "city" => city,
+    "distance_km" => dist,
+    "elevation_gain_m" => elev,
+    # Approximate
+    "elevation_loss_m" => elev,
+    "finish_time_seconds" => time,
+    "surface_type" => surface,
+    "terrain_difficulty" => difficulty,
+    # Generic
+    "weather_conditions" => "Clear",
+    # Generic
+    "temperature_celsius" => 15,
+    "race_report" => report
+  })
 end)
 
-# Print summary
-stats = Racing.get_race_stats(bogdan)
-all_races = Racing.list_races(bogdan)
-
 IO.puts("\n" <> String.duplicate("=", 50))
-IO.puts("🎉 SEED DATA GENERATION COMPLETE!")
-IO.puts(String.duplicate("=", 50))
-IO.puts("\n📊 Summary:")
-IO.puts("   • Total races: #{length(all_races)}")
-IO.puts("   • Completed: #{stats.total_races}")
-IO.puts("   • Total distance: #{stats.total_distance_km} km")
-IO.puts("   • Total elevation: #{stats.total_elevation_gain_m} m")
-IO.puts("\n👤 Athlete Creds:")
-IO.puts("   • Email: bogdan@example.com")
-IO.puts("   • Password: SecretPassword123!")
-IO.puts("\n👉 IMPORTANT: Please Log Out and Log In again to see the new data.")
+IO.puts("🎉 SEED COMPLETE!")
+IO.puts("Log in with: bogdan.blanaru97@gmail.com / H0YoUM7Lc5r2DwV.")
 IO.puts(String.duplicate("=", 50) <> "\n")
