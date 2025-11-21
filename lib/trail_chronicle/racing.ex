@@ -230,28 +230,30 @@ defmodule TrailChronicle.Racing do
     |> Repo.all()
   end
 
+  def get_photo!(id), do: Repo.get!(RacePhoto, id)
+
+  def delete_photo(%RacePhoto{} = photo) do
+    File.rm(Path.join(["priv", "static", photo.image_path]))
+    Repo.delete(photo)
+  end
+
+  def set_cover_photo(%Race{} = race, photo_path) do
+    update_race(race, %{cover_photo_url: photo_path})
+  end
+
   @doc """
-  Parses a GPX file, extracts the track, calculates stats, and updates the race.
+  Parses GPX. Only updates stats if race is UPCOMING.
   """
   def update_race_gpx(race, gpx_file_path) do
     case File.read(gpx_file_path) do
       {:ok, raw_content} ->
         xml_content = sanitize_xml(raw_content)
-
+        # ... (Parsing logic same as before) ...
         points =
           xml_content
-          |> xpath(
-            ~x"//trkpt"l,
-            lat: ~x"./@lat"s,
-            lon: ~x"./@lon"s,
-            ele: ~x"./ele/text()"s
-          )
+          |> xpath(~x"//trkpt"l, lat: ~x"./@lat"s, lon: ~x"./@lon"s, ele: ~x"./ele/text()"s)
           |> Enum.map(fn %{lat: lat, lon: lon, ele: ele} ->
-            %{
-              lat: parse_float(lat),
-              lon: parse_float(lon),
-              ele: parse_float(ele)
-            }
+            %{lat: parse_float(lat), lon: parse_float(lon), ele: parse_float(ele)}
           end)
           |> Enum.filter(fn p -> p.lat != 0.0 and p.lon != 0.0 end)
 
@@ -259,29 +261,42 @@ defmodule TrailChronicle.Racing do
           {total_dist, total_gain, total_loss} = calculate_track_stats(points)
           dist_km = total_dist / 1000.0
 
-          route_wrapper = %{
-            "coordinates" => Enum.map(points, fn p -> [p.lat, p.lon] end)
-          }
+          route_wrapper = %{"coordinates" => Enum.map(points, fn p -> [p.lat, p.lon] end)}
 
-          climb_ratio = if dist_km > 0, do: total_gain / dist_km, else: 0
-          difficulty = calculate_difficulty(climb_ratio)
+          # LOGIC: Only overwrite stats if race is upcoming (planning phase)
+          # If completed, we assume user manually entered their official race stats
+          attrs =
+            if race.status == "upcoming" do
+              %{
+                route_data: route_wrapper,
+                has_gpx: true,
+                distance_km: Float.round(dist_km, 2),
+                elevation_gain_m: round(total_gain),
+                elevation_loss_m: round(total_loss),
+                # Recalculate difficulty for upcoming races
+                terrain_difficulty:
+                  calculate_difficulty(if dist_km > 0, do: total_gain / dist_km, else: 0)
+              }
+            else
+              # For completed races, ONLY add the map. Keep original stats.
+              %{
+                route_data: route_wrapper,
+                has_gpx: true
+              }
+            end
 
+          # Generate description only if missing (regardless of status)
           smart_report =
             if is_nil(race.race_report) or race.race_report == "" do
+              climb_ratio = if dist_km > 0, do: total_gain / dist_km, else: 0
               generate_smart_description(dist_km, total_gain, climb_ratio)
             else
               race.race_report
             end
 
-          update_race(race, %{
-            route_data: route_wrapper,
-            has_gpx: true,
-            distance_km: Float.round(dist_km, 2),
-            elevation_gain_m: round(total_gain),
-            elevation_loss_m: round(total_loss),
-            terrain_difficulty: difficulty,
-            race_report: smart_report
-          })
+          attrs = Map.put(attrs, :race_report, smart_report)
+
+          update_race(race, attrs)
         else
           {:error, :no_track_points}
         end
@@ -309,9 +324,6 @@ defmodule TrailChronicle.Racing do
     |> String.replace(~r/xmlns="[^"]*"/, "")
     |> String.replace(~r/xmlns:[a-z0-9]+="[^"]*"/, "")
   end
-
-  defp parse_float(nil), do: 0.0
-  defp parse_float(""), do: 0.0
 
   defp parse_float(val) when is_binary(val) do
     case Float.parse(val) do

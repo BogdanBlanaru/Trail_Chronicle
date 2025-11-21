@@ -1,7 +1,7 @@
 defmodule TrailChronicleWeb.RaceLive.Show do
   use TrailChronicleWeb, :live_view
 
-  alias TrailChronicle.{Accounts, Racing}
+  alias TrailChronicle.{Racing}
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
@@ -113,6 +113,41 @@ defmodule TrailChronicleWeb.RaceLive.Show do
      socket
      |> assign(:photos, updated_photos)
      |> put_flash(:info, gettext("Memories saved!"))}
+  end
+
+  @impl true
+  def handle_event("set_cover", %{"id" => photo_id}, socket) do
+    photo = Racing.get_photo!(photo_id)
+
+    case Racing.set_cover_photo(socket.assigns.race, photo.image_path) do
+      {:ok, updated_race} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, gettext("Cover photo updated!"))
+         |> assign(:race, updated_race)}
+
+      _ ->
+        {:noreply, put_flash(socket, :error, "Failed to set cover.")}
+    end
+  end
+
+  @impl true
+  def handle_event("delete_photo", %{"id" => photo_id}, socket) do
+    photo = Racing.get_photo!(photo_id)
+
+    case Racing.delete_photo(photo) do
+      {:ok, _} ->
+        # If the deleted photo was the cover, maybe unset it? (Optional logic, skipping for simplicity)
+        updated_photos = Racing.list_race_photos(socket.assigns.race.id)
+
+        {:noreply,
+         socket
+         |> assign(:photos, updated_photos)
+         |> put_flash(:info, gettext("Photo removed."))}
+
+      _ ->
+        {:noreply, put_flash(socket, :error, "Failed to delete photo.")}
+    end
   end
 
   @impl true
