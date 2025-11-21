@@ -65,9 +65,8 @@ defmodule TrailChronicleWeb.RaceLive.Show do
       %TrailChronicle.Racing.Race{} = updated_race ->
         {:noreply,
          socket
-         |> put_flash(:info, gettext("Route analyzed! Stats updated."))
+         |> put_flash(:info, gettext("Route analyzed!"))
          |> assign(:race, updated_race)
-         # Push event to JS hook to re-init map immediately
          |> push_event("init_map", %{route: updated_race.route_data})}
 
       _ ->
@@ -75,7 +74,6 @@ defmodule TrailChronicleWeb.RaceLive.Show do
     end
   end
 
-  # NEW: Delete Handler
   @impl true
   def handle_event("delete_gpx", _params, socket) do
     case Racing.delete_race_gpx(socket.assigns.race) do
@@ -115,30 +113,22 @@ defmodule TrailChronicleWeb.RaceLive.Show do
      |> put_flash(:info, gettext("Memories saved!"))}
   end
 
-  @impl true
-  def handle_event("set_cover", %{"id" => photo_id}, socket) do
-    photo = Racing.get_photo!(photo_id)
-
-    case Racing.set_cover_photo(socket.assigns.race, photo.image_path) do
-      {:ok, updated_race} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, gettext("Cover photo updated!"))
-         |> assign(:race, updated_race)}
-
-      _ ->
-        {:noreply, put_flash(socket, :error, "Failed to set cover.")}
-    end
-  end
-
+  # NEW: Delete Photo
   @impl true
   def handle_event("delete_photo", %{"id" => photo_id}, socket) do
     photo = Racing.get_photo!(photo_id)
 
     case Racing.delete_photo(photo) do
       {:ok, _} ->
-        # If the deleted photo was the cover, maybe unset it? (Optional logic, skipping for simplicity)
         updated_photos = Racing.list_race_photos(socket.assigns.race.id)
+
+        # If the deleted photo was open in lightbox, close it
+        socket =
+          if socket.assigns.selected_photo && socket.assigns.selected_photo.id == photo.id do
+            assign(socket, :selected_photo, nil)
+          else
+            socket
+          end
 
         {:noreply,
          socket
@@ -147,6 +137,23 @@ defmodule TrailChronicleWeb.RaceLive.Show do
 
       _ ->
         {:noreply, put_flash(socket, :error, "Failed to delete photo.")}
+    end
+  end
+
+  # NEW: Set Cover
+  @impl true
+  def handle_event("set_cover", %{"id" => photo_id}, socket) do
+    photo = Racing.get_photo!(photo_id)
+
+    case Racing.set_cover_photo(socket.assigns.race, photo.image_path) do
+      {:ok, updated_race} ->
+        {:noreply,
+         socket
+         |> assign(:race, updated_race)
+         |> put_flash(:info, gettext("Cover photo updated!"))}
+
+      _ ->
+        {:noreply, put_flash(socket, :error, "Failed to set cover.")}
     end
   end
 
@@ -222,17 +229,6 @@ defmodule TrailChronicleWeb.RaceLive.Show do
     end
   end
 
-  defp format_time(nil), do: "—"
-
-  defp format_time(seconds) do
-    hours = div(seconds, 3600)
-    minutes = div(rem(seconds, 3600), 60)
-    secs = rem(seconds, 60)
-    "#{pad(hours)}:#{pad(minutes)}:#{pad(secs)}"
-  end
-
-  defp pad(num), do: String.pad_leading(to_string(num), 2, "0")
-
   defp calculate_pace(distance_km, time_seconds)
        when is_struct(distance_km, Decimal) and is_integer(time_seconds) do
     dist_float = Decimal.to_float(distance_km)
@@ -248,4 +244,15 @@ defmodule TrailChronicleWeb.RaceLive.Show do
   end
 
   defp calculate_pace(_, _), do: nil
+
+  defp format_time(nil), do: "—"
+
+  defp format_time(seconds) do
+    hours = div(seconds, 3600)
+    minutes = div(rem(seconds, 3600), 60)
+    secs = rem(seconds, 60)
+    "#{pad(hours)}:#{pad(minutes)}:#{pad(secs)}"
+  end
+
+  defp pad(num), do: String.pad_leading(to_string(num), 2, "0")
 end
