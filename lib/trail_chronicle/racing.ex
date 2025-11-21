@@ -4,7 +4,7 @@ defmodule TrailChronicle.Racing do
   """
   import Ecto.Query, warn: false
   alias TrailChronicle.Repo
-  alias TrailChronicle.Racing.{Race, RacePhoto}
+  alias TrailChronicle.Racing.{Race, RacePhoto, Shoe}
   alias TrailChronicle.Accounts.Athlete
   import SweetXml
 
@@ -429,5 +429,97 @@ defmodule TrailChronicle.Racing do
 
     c = 2 * :math.atan2(:math.sqrt(a), :math.sqrt(1 - a))
     r * c
+  end
+
+  # --- SHOES ---
+
+  def list_shoes(%Athlete{id: athlete_id}) do
+    Shoe
+    |> where([s], s.athlete_id == ^athlete_id)
+    # Active first
+    |> order_by([s], desc: s.is_retired, desc: s.inserted_at)
+    |> Repo.all()
+  end
+
+  def list_active_shoes(%Athlete{id: athlete_id}) do
+    Shoe
+    |> where([s], s.athlete_id == ^athlete_id)
+    |> where([s], s.is_retired == false)
+    |> order_by([s], desc: s.inserted_at)
+    |> Repo.all()
+  end
+
+  def get_shoe!(id), do: Repo.get!(Shoe, id)
+
+  def create_shoe(%Athlete{id: athlete_id}, attrs) do
+    %Shoe{athlete_id: athlete_id}
+    |> Shoe.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def change_shoe(%Shoe{} = shoe, attrs \\ %{}) do
+    Shoe.changeset(shoe, attrs)
+  end
+
+  def retire_shoe(%Shoe{} = shoe) do
+    shoe
+    |> Ecto.Changeset.change(is_retired: !shoe.is_retired)
+    |> Repo.update()
+  end
+
+  def delete_shoe(%Shoe{} = shoe) do
+    Repo.delete(shoe)
+  end
+
+  # --- LOGIC: Recalculate Mileage ---
+  # We call this whenever a race is created, updated, or deleted
+
+  def recalculate_shoe_mileage(shoe_id) when is_nil(shoe_id), do: :ok
+
+  def recalculate_shoe_mileage(shoe_id) do
+    # Sum distance of all races assigned to this shoe
+    total_dist =
+      Race
+      |> where([r], r.shoe_id == ^shoe_id)
+      |> select([r], sum(r.distance_km))
+      |> Repo.one() || Decimal.new(0)
+
+    Shoe
+    |> Repo.get!(shoe_id)
+    |> Ecto.Changeset.change(current_distance_km: total_dist)
+    |> Repo.update()
+  end
+
+  # --- UPDATED RACE CRUD (Wrappers) ---
+
+  # We wrap the existing create/update functions to trigger mileage calc
+
+  def create_race_with_shoe(athlete, attrs) do
+    case create_race(athlete, attrs) do
+      {:ok, race} ->
+        if race.shoe_id, do: recalculate_shoe_mileage(race.shoe_id)
+        {:ok, race}
+
+      error ->
+        error
+    end
+  end
+
+  def update_race_with_shoe(race, attrs) do
+    old_shoe_id = race.shoe_id
+
+    case update_race(race, attrs) do
+      {:ok, updated_race} ->
+        # Recalculate new shoe
+        if updated_race.shoe_id, do: recalculate_shoe_mileage(updated_race.shoe_id)
+        # If shoe changed, recalculate the old one too
+        if old_shoe_id && old_shoe_id != updated_race.shoe_id,
+          do: recalculate_shoe_mileage(old_shoe_id)
+
+        {:ok, updated_race}
+
+      error ->
+        error
+    end
   end
 end

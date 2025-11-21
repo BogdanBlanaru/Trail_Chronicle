@@ -18,6 +18,8 @@ defmodule TrailChronicle.Racing.Race do
     # Relationship
     belongs_to :athlete, TrailChronicle.Accounts.Athlete
 
+    belongs_to :shoe, TrailChronicle.Racing.Shoe
+
     # Basic info
     field :name, :string
     field :race_date, :date
@@ -92,6 +94,7 @@ defmodule TrailChronicle.Racing.Race do
     race
     |> cast(attrs, [
       :athlete_id,
+      :shoe_id,
       :name,
       :race_date,
       :race_type,
@@ -140,6 +143,7 @@ defmodule TrailChronicle.Racing.Race do
     |> validate_number(:total_participants, greater_than: 0)
     |> validate_performance_fields()
     |> foreign_key_constraint(:athlete_id)
+    |> foreign_key_constraint(:shoe_id)
   end
 
   @doc """

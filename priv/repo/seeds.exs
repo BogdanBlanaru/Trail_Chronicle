@@ -1,11 +1,12 @@
 alias TrailChronicle.{Repo, Accounts, Racing}
+alias TrailChronicle.Racing.{Race, Shoe}
 
 IO.puts("\n🌱 Starting seed data generation...\n")
 
 # 1. Clear existing data
 IO.puts("🗑️  Clearing existing races...")
-Repo.delete_all(Racing.Race)
-
+Repo.delete_all(Race)
+Repo.delete_all(Shoe)
 IO.puts("🗑️  Clearing existing athletes...")
 Repo.delete_all(Accounts.Athlete)
 
@@ -20,6 +21,14 @@ IO.puts("👤 Creating athlete: Bogdan Blanaru...")
     "last_name" => "Blanaru",
     "preferred_language" => "ro"
   })
+
+# FIX: Truncate microseconds to match Ecto defaults
+now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+
+athlete =
+  athlete
+  |> Ecto.Changeset.change(confirmed_at: now)
+  |> Repo.update!()
 
 {:ok, athlete} =
   Accounts.update_athlete_profile(athlete, %{
@@ -38,12 +47,56 @@ IO.puts("👤 Creating athlete: Bogdan Blanaru...")
 
 IO.puts("✅ Athlete created: #{athlete.email}\n")
 
-# 3. Define Helper Logic for Importing
-# This function maps raw CSV data to our Schema logic
+# 3. Create The Shoe Garage
+IO.puts("👟 Building the Shoe Garage...")
+
+# Trail Shoe: Nnormal Tomir 2.0
+tomir =
+  Repo.insert!(%Shoe{
+    athlete_id: athlete.id,
+    brand: "Nnormal",
+    model: "Tomir 2.0",
+    nickname: "The Kilians",
+    distance_limit_km: 900,
+    is_retired: false,
+    purchased_at: ~D[2025-04-01],
+    inserted_at: DateTime.utc_now() |> DateTime.truncate(:second),
+    updated_at: DateTime.utc_now() |> DateTime.truncate(:second)
+  })
+
+# Road Shoe 1: Hoka Clifton 8
+clifton8 =
+  Repo.insert!(%Shoe{
+    athlete_id: athlete.id,
+    brand: "Hoka",
+    model: "Clifton 8",
+    nickname: "Daily Trainer (Old)",
+    distance_limit_km: 800,
+    is_retired: true,
+    purchased_at: ~D[2024-01-01],
+    inserted_at: DateTime.utc_now() |> DateTime.truncate(:second),
+    updated_at: DateTime.utc_now() |> DateTime.truncate(:second)
+  })
+
+# Road Shoe 2: Hoka Clifton 9
+clifton9 =
+  Repo.insert!(%Shoe{
+    athlete_id: athlete.id,
+    brand: "Hoka",
+    model: "Clifton 9",
+    nickname: "Daily Trainer (New)",
+    distance_limit_km: 800,
+    is_retired: false,
+    purchased_at: ~D[2025-09-01],
+    inserted_at: DateTime.utc_now() |> DateTime.truncate(:second),
+    updated_at: DateTime.utc_now() |> DateTime.truncate(:second)
+  })
+
+# 4. Define Helper Logic for Importing
 classify_race = fn name, dist, elev ->
   name_lower = String.downcase(name)
 
-  # Determine Type based on distance and name
+  # Determine Type
   type =
     cond do
       dist >= 43.0 -> "ultra"
@@ -52,17 +105,16 @@ classify_race = fn name, dist, elev ->
       String.contains?(name_lower, "cross") or String.contains?(name_lower, "cros") -> "10k"
       dist >= 9.5 and dist <= 10.5 -> "10k"
       dist >= 4.5 and dist <= 5.5 -> "5k"
-      # Default for others
       true -> "trail"
     end
 
-  # Determine Surface based on elevation/distance ratio or keywords
-  # If > 20m elevation per km, likely trail
+  # Determine Surface
   climb_ratio = if dist > 0, do: elev / dist, else: 0
 
   surface =
     if climb_ratio > 20 or String.contains?(name_lower, "trail") or
-         String.contains?(name_lower, "mountain"),
+         String.contains?(name_lower, "mountain") or String.contains?(name_lower, "ciucaș") or
+         String.contains?(name_lower, "postăvaru"),
        do: "trail",
        else: "asphalt"
 
@@ -76,21 +128,17 @@ classify_race = fn name, dist, elev ->
       true -> 5
     end
 
-  # Is it a "Real Race" or Training?
-  # We assume anything with a specific name is a race, generic names are training
+  # Is it a "Real Race"?
   is_race =
     String.match?(name, ~r/(Marathon|Semimaraton|Trail|Race|Cros|X3|Festival|RunIasi|Up to)/i)
 
-  # We map "Training" runs to "other" or "trail" to keep them in the system but distinct
   final_type = if is_race, do: type, else: "other"
 
   {final_type, surface, difficulty, is_race}
 end
 
-# 4. The Data (Extracted from your Strava CSV)
-# Only "Run" activities included. Hikes/Weights removed.
+# 5. The Data
 raw_activities = [
-  # Format: {Name, DateString, TimeSeconds, DistKm, ElevM, City}
   {"Evening Run", "2024-03-14", 4929, 11.56, 15, "Brașov"},
   {"Evening Run", "2024-03-17", 7035, 15.99, 29, "Brașov"},
   {"Evening Run", "2024-03-24", 4247, 11.11, 103, "Brașov"},
@@ -178,6 +226,26 @@ IO.puts("🏃 Importing #{length(raw_activities)} activities...")
 Enum.each(raw_activities, fn {name, date_str, time, dist, elev, city} ->
   {type, surface, difficulty, _is_race} = classify_race.(name, dist, elev)
 
+  # Parse date to help with shoe assignment
+  date = Date.from_iso8601!(date_str)
+
+  # Shoe Assignment Logic
+  shoe_id =
+    cond do
+      # TRAIL runs get Tomir (Assuming even old ones mapped to "Trail" category for simplicity,
+      # unless you want old trail runs to be null. We will map all Trails to Tomir for now as per request)
+      surface == "trail" or type == "ultra" ->
+        tomir.id
+
+      # ASPHALT runs: Check date split
+      true ->
+        if Date.compare(date, ~D[2025-09-01]) == :lt do
+          clifton8.id
+        else
+          clifton9.id
+        end
+    end
+
   # Set status to "completed" since these are from history
   # We define a race "report" automatically based on data to make it look nice
   report =
@@ -190,25 +258,30 @@ Enum.each(raw_activities, fn {name, date_str, time, dist, elev, city} ->
 
   Racing.create_race(athlete, %{
     "name" => name,
-    "race_date" => Date.from_iso8601!(date_str),
+    "race_date" => date,
     "race_type" => type,
     "status" => "completed",
     "country" => "Romania",
     "city" => city,
     "distance_km" => dist,
     "elevation_gain_m" => elev,
-    # Approximate
     "elevation_loss_m" => elev,
     "finish_time_seconds" => time,
     "surface_type" => surface,
     "terrain_difficulty" => difficulty,
-    # Generic
     "weather_conditions" => "Clear",
-    # Generic
     "temperature_celsius" => 15,
-    "race_report" => report
+    "race_report" => report,
+    # <--- Link the shoe!
+    "shoe_id" => shoe_id
   })
 end)
+
+# 6. Recalculate shoe mileage after import
+IO.puts("🔧 Recalculating shoe mileage...")
+Racing.recalculate_shoe_mileage(tomir.id)
+Racing.recalculate_shoe_mileage(clifton8.id)
+Racing.recalculate_shoe_mileage(clifton9.id)
 
 IO.puts("\n" <> String.duplicate("=", 50))
 IO.puts("🎉 SEED COMPLETE!")

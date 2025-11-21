@@ -58,6 +58,8 @@ defmodule TrailChronicleWeb.Router do
       live "/calendar", CalendarLive, :index
       live "/stats", StatsLive, :index
 
+      live "/shoes", ShoeLive.Index, :index
+
       # Settings
       live "/athletes/settings", AthleteSettingsLive, :edit
       live "/athletes/settings/confirm_email/:token", AthleteSettingsLive, :confirm_email
