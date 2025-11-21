@@ -116,6 +116,81 @@
 
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-30 pb-20">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-3xl shadow-lg text-white overflow-hidden relative">
+        <div class="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white/10 rounded-full blur-2xl">
+        </div>
+        <div class="absolute bottom-0 left-0 -mb-4 -ml-4 w-24 h-24 bg-blue-500/20 rounded-full blur-xl">
+        </div>
+
+        <div class="p-8 relative z-10">
+          <div class="flex justify-between items-start mb-6">
+            <h3 class="font-bold text-2xl flex items-center gap-3">
+              <span class="bg-white/20 p-2 rounded-lg backdrop-blur-sm text-2xl">🤖</span>
+              {gettext("AI Race Coach")}
+            </h3>
+
+            <%= if !@race.ai_insight do %>
+              <button
+                phx-click="generate_ai"
+                disabled={@ai_loading}
+                class="bg-white text-indigo-600 px-6 py-2 rounded-xl font-bold text-sm hover:bg-indigo-50 transition-all shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-wait"
+              >
+                <%= if @ai_loading do %>
+                  <svg
+                    class="animate-spin h-4 w-4"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    >
+                    </circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    >
+                    </path>
+                  </svg>
+                  {gettext("Analyzing...")}
+                <% else %>
+                  <span>✨ {gettext("Generate Strategy")}</span>
+                <% end %>
+              </button>
+            <% end %>
+          </div>
+
+          <%= if @race.ai_insight do %>
+            <div class="bg-white rounded-2xl p-6 text-slate-800 shadow-sm animate-fade-in">
+              {Phoenix.HTML.raw(@race.ai_insight)}
+
+              <div class="mt-4 text-right">
+                <span class="text-[10px] text-slate-400 uppercase font-bold">
+                  {gettext("Generated")}: {Calendar.strftime(@race.ai_generated_at, "%d %b %H:%M")}
+                </span>
+                <button
+                  phx-click="generate_ai"
+                  class="ml-4 text-xs text-indigo-600 hover:underline font-semibold"
+                >
+                  {gettext("Regenerate")}
+                </button>
+              </div>
+            </div>
+          <% else %>
+            <div class="text-indigo-100/80 text-sm leading-relaxed max-w-2xl">
+              {gettext(
+                "Unlock personalized insights. The AI Coach analyzes your course profile, distance, and gear to provide pacing strategies, nutrition advice, and mental cues for race day."
+              )}
+            </div>
+          <% end %>
+        </div>
+      </div>
       <div class="lg:col-span-2 space-y-8">
         <div class="bg-white rounded-2xl shadow-xl border border-slate-100 p-6 flex flex-wrap gap-8 justify-around items-center text-center">
           <div>

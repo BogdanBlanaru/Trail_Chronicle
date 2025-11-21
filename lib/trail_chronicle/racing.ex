@@ -3,6 +3,7 @@ defmodule TrailChronicle.Racing do
   The Racing context.
   """
   import Ecto.Query, warn: false
+  alias TrailChronicle.AI.Coach
   alias TrailChronicle.Repo
   alias TrailChronicle.Racing.{Race, RacePhoto, Shoe}
   alias TrailChronicle.Accounts.Athlete
@@ -521,5 +522,22 @@ defmodule TrailChronicle.Racing do
       error ->
         error
     end
+  end
+
+  # --- AI OPERATIONS ---
+
+  def save_ai_insight(%Race{} = race) do
+    # 1. Generate (Simulated or Real)
+    # Preload shoe to give the AI context about gear
+    race = Repo.preload(race, :shoe)
+    insight = Coach.generate_analysis(race)
+
+    # 2. Save to DB
+    race
+    |> Race.changeset(%{
+      ai_insight: insight,
+      ai_generated_at: DateTime.utc_now()
+    })
+    |> Repo.update()
   end
 end

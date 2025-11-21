@@ -60,6 +60,9 @@ defmodule TrailChronicle.Racing.Race do
     field :has_gpx, :boolean, default: false
     field :route_data, :map
 
+    field :ai_insight, :string
+    field :ai_generated_at, :utc_datetime
+
     has_many :photos, TrailChronicle.Racing.RacePhoto
 
     # Registration & Cost
@@ -125,7 +128,9 @@ defmodule TrailChronicle.Racing.Race do
       :cost_eur,
       :registration_deadline,
       :is_registered,
-      :route_data
+      :route_data,
+      :ai_insight,
+      :ai_generated_at
     ])
     |> validate_required([:athlete_id, :name, :race_date])
     |> validate_inclusion(:race_type, @race_types)

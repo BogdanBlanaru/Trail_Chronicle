@@ -19,8 +19,8 @@ defmodule TrailChronicleWeb.RaceLive.Show do
            |> assign(:race, race)
            |> assign(:photos, photos)
            |> assign(:selected_photo, nil)
-           # NEW: State for Map Lightbox
            |> assign(:map_lightbox, false)
+           |> assign(:ai_loading, false)
            |> assign(:pace, calculate_pace(race.distance_km, race.finish_time_seconds))
            |> assign(:current_path, "/races/#{id}")
            |> assign(:page_title, race.name)
@@ -172,6 +172,35 @@ defmodule TrailChronicleWeb.RaceLive.Show do
 
       _ ->
         {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("generate_ai", _, socket) do
+    # Send to self to not block the UI immediately (async pattern)
+    send(self(), :run_ai_analysis)
+
+    {:noreply,
+     socket
+     |> assign(:ai_loading, true)
+     |> put_flash(:info, gettext("Coach is analyzing your race data..."))}
+  end
+
+  @impl true
+  def handle_info(:run_ai_analysis, socket) do
+    case Racing.save_ai_insight(socket.assigns.race) do
+      {:ok, updated_race} ->
+        {:noreply,
+         socket
+         |> assign(:race, updated_race)
+         |> assign(:ai_loading, false)
+         |> put_flash(:info, gettext("Analysis complete!"))}
+
+      {:error, _} ->
+        {:noreply,
+         socket
+         |> assign(:ai_loading, false)
+         |> put_flash(:error, gettext("Coach is currently offline."))}
     end
   end
 
