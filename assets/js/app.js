@@ -31,26 +31,65 @@ Hooks.RaceMap = {
   updated() {
     this.initMap();
   },
+  destroyed() {
+    if (this.map) {
+      this.map.remove();
+      this.map = null;
+    }
+  },
   initMap() {
     if (!this.el.dataset.route) return;
     
-    const data = JSON.parse(this.el.dataset.route);
-    // FIX: Access the "coordinates" key we created in Elixir
-    const routePoints = data.coordinates; 
-    
+    // FIX: Robust parsing to handle both formats
+    let routePoints = [];
+    try {
+      const raw = JSON.parse(this.el.dataset.route);
+      // Handle: data-route="[[45,25],...]" OR data-route='{"coordinates":[[45,25],...]}'
+      if (Array.isArray(raw)) {
+        routePoints = raw;
+      } else if (raw.coordinates) {
+        routePoints = raw.coordinates;
+      }
+    } catch(e) { console.error("GPX Parse Error", e); return; }
+
     if (routePoints && routePoints.length > 0) {
       if (this.map) {
-        this.map.remove();
+         this.map.off();
+         this.map.remove();
       }
 
-      this.map = L.map(this.el.id).setView(routePoints[0], 13);
+      // Check if this is the "Expanded" lightbox map
+      const isExpanded = this.el.dataset.expanded === "true";
 
+      // Initialize Map
+      this.map = L.map(this.el.id, {
+        scrollWheelZoom: isExpanded, // Enable scroll zoom only in lightbox
+        zoomControl: true
+      }).setView(routePoints[0], 13);
+
+      // Add Tiles
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
       }).addTo(this.map);
 
-      const polyline = L.polyline(routePoints, {color: '#2563eb', weight: 4}).addTo(this.map);
-      this.map.fitBounds(polyline.getBounds());
+      // Add Route Line
+      const polyline = L.polyline(routePoints, {
+        color: '#2563eb', 
+        weight: isExpanded ? 5 : 4, 
+        opacity: 0.8
+      }).addTo(this.map);
+      
+      // Fit Bounds
+      this.map.fitBounds(polyline.getBounds(), {
+        padding: isExpanded ? [50, 50] : [20, 20]
+      });
+
+      // Extra Features for Lightbox
+      if (isExpanded) {
+        L.control.scale().addTo(this.map);
+        // Force redraw to fix grey tiles
+        setTimeout(() => { this.map.invalidateSize(); }, 200);
+      }
     }
   }
 }
