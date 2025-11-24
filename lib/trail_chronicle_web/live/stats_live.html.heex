@@ -274,10 +274,11 @@
     </h3>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
       <% categories = [
-        {"Marathon", "marathon", "bg-blue-50 text-blue-700 border-blue-100"},
-        {"Half Marathon", "half_marathon", "bg-emerald-50 text-emerald-700 border-emerald-100"},
-        {"Ultra", "ultra", "bg-purple-50 text-purple-700 border-purple-100"},
-        {"10k", "10k", "bg-amber-50 text-amber-700 border-amber-100"}
+        {"Marathon", :marathon, "bg-blue-50 text-blue-700 border-blue-100"},
+        {"Half Marathon", :half_marathon, "bg-emerald-50 text-emerald-700 border-emerald-100"},
+        {"Ultra", :ultra, "bg-purple-50 text-purple-700 border-purple-100"},
+        {"10k", :"10k", "bg-amber-50 text-amber-700 border-amber-100"},
+        {"5k", :"5k", "bg-rose-50 text-rose-700 border-rose-100"}
       ] %>
 
       <%= for {label, type, color_class} <- categories do %>

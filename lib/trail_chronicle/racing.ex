@@ -200,13 +200,30 @@ defmodule TrailChronicle.Racing do
   end
 
   def get_personal_bests(%Athlete{id: athlete_id}) do
-    ["marathon", "half_marathon", "10k", "ultra"]
-    |> Enum.map(fn type ->
+    # Define distance ranges for each category (more lenient for trail variations)
+    categories = [
+      # Marathon: 40-45km (accounts for GPS drift)
+      {:marathon, 40.0, 45.0},
+      # Half: 19-25km (trail courses vary)
+      {:half_marathon, 19.0, 25.0},
+      # 10k: 9-12km (allows for trail additions)
+      {:"10k", 9.0, 12.0},
+      # 5k: 4-6km
+      {:"5k", 4.0, 6.0},
+      # Ultra: 45km+
+      {:ultra, 45.0, 1000.0}
+    ]
+
+    categories
+    |> Enum.map(fn {type, min_dist, max_dist} ->
       best_race =
         Race
         |> where([r], r.athlete_id == ^athlete_id)
         |> where([r], r.status == "completed")
-        |> where([r], r.race_type == ^type)
+        |> where([r], not is_nil(r.finish_time_seconds))
+        |> where([r], r.finish_time_seconds > 0)
+        |> where([r], fragment("?::numeric >= ?", r.distance_km, ^min_dist))
+        |> where([r], fragment("?::numeric < ?", r.distance_km, ^max_dist))
         |> order_by([r], asc: r.finish_time_seconds)
         |> limit(1)
         |> Repo.one()
