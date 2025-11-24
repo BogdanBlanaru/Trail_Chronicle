@@ -67,8 +67,7 @@ defmodule TrailChronicle.Exports do
         name: race.name,
         date: race.race_date,
         type: race.race_type,
-        # Convert Decimal to float
-        distance_km: Decimal.to_float(race.distance_km),
+        distance_km: if(race.distance_km, do: Decimal.to_float(race.distance_km), else: nil),
         elevation_gain_m: race.elevation_gain_m,
         finish_time_seconds: race.finish_time_seconds,
         status: race.status,
