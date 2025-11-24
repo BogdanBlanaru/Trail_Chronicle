@@ -188,13 +188,20 @@ defmodule TrailChronicleWeb.RaceLive.Show do
 
   @impl true
   def handle_event("generate_ai", _, socket) do
-    # Send to self to not block the UI immediately (async pattern)
-    send(self(), :run_ai_analysis)
+    race = socket.assigns.race
+
+    # Queue background job instead of blocking
+    %{race_id: race.id}
+    |> TrailChronicle.Workers.AiAnalysisWorker.new()
+    |> Oban.insert()
 
     {:noreply,
      socket
      |> assign(:ai_loading, true)
-     |> put_flash(:info, gettext("Coach is analyzing your race data..."))}
+     |> put_flash(
+       :info,
+       gettext("AI analysis started in background. Refresh in a few moments...")
+     )}
   end
 
   @impl true

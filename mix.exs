@@ -59,7 +59,11 @@ defmodule TrailChronicle.MixProject do
       {:dns_cluster, "~> 0.1.1"},
       {:bcrypt_elixir, "~> 3.0"},
       {:bandit, "~> 1.5"},
-      {:sweet_xml, "~> 0.7"}
+      {:sweet_xml, "~> 0.7"},
+      {:oban, "~> 2.18"},
+      {:tesla, "~> 1.9"},
+      {:hackney, "~> 1.20"},
+      {:nimble_csv, "~> 1.2"}
     ]
   end
 

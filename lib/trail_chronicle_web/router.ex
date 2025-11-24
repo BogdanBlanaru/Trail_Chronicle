@@ -62,10 +62,23 @@ defmodule TrailChronicleWeb.Router do
 
       live "/achievements", AchievementsLive, :index
 
+      live "/integrations", IntegrationsLive, :index
+
       # Settings
       live "/athletes/settings", AthleteSettingsLive, :edit
       live "/athletes/settings/confirm_email/:token", AthleteSettingsLive, :confirm_email
     end
+
+    # Strava OAuth
+    get "/integrations/strava/authorize", StravaController, :authorize
+    get "/integrations/strava/callback", StravaController, :callback
+    get "/integrations/strava/disconnect", StravaController, :disconnect
+    get "/integrations/strava/sync", StravaController, :sync
+
+    # Data Export
+    get "/export/csv", ExportController, :csv
+    get "/export/json", ExportController, :json
+    get "/export/pdf/:id", ExportController, :pdf
   end
 
   # Auth routes accessible when logged in

@@ -7,18 +7,18 @@
   <div class="bg-slate-900 pt-12 pb-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden shadow-2xl">
     <div class="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/hexellence.png')]">
     </div>
-    
+
     <div class="max-w-7xl mx-auto relative z-10">
       <div class="text-center">
         <h1 class="text-4xl md:text-5xl font-black text-white mb-4 tracking-tight">
           {gettext("Hall of Fame")}
         </h1>
-        
+
         <p class="text-lg text-slate-300 max-w-2xl mx-auto">
           {gettext("Milestones and trophies earned throughout your running career.")}
         </p>
       </div>
-      
+
       <div class="mt-10 flex justify-center">
         <div class="inline-flex items-center bg-white/10 backdrop-blur-md rounded-full px-6 py-2 border border-white/20">
           <span class="text-amber-400 text-xl mr-2">🏆</span>
@@ -30,7 +30,7 @@
       </div>
     </div>
   </div>
-  
+
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-20">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <%= for badge <- @badges do %>
@@ -40,30 +40,30 @@
             <div class="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg shadow-sm z-10">
               UNLOCKED
             </div>
-            
+
             <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none">
             </div>
           <% end %>
-          
+
           <div class="p-6 flex items-start gap-5">
             <div class={"w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shrink-0 shadow-inner " <> 
               if(badge.earned, do: badge.color, else: "bg-slate-200 text-slate-400")}>
               {badge.icon}
             </div>
-            
+
             <div class="flex-1">
               <h3 class={"font-bold text-lg mb-1 " <> if(badge.earned, do: "text-slate-900", else: "text-slate-500")}>
                 {badge.title}
               </h3>
-              
+
               <p class="text-sm text-slate-500 leading-snug">{badge.description}</p>
-              
+
               <%= if Map.has_key?(badge, :progress) and !badge.earned do %>
                 <div class="mt-3">
                   <div class="flex justify-between text-[10px] font-bold text-slate-400 uppercase mb-1">
                     <span>Progress</span> <span>{badge.progress}%</span>
                   </div>
-                  
+
                   <div class="w-full bg-slate-200 rounded-full h-1.5">
                     <div
                       class="bg-blue-500 h-1.5 rounded-full transition-all duration-1000"

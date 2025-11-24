@@ -76,4 +76,9 @@ defmodule TrailChronicle.Accounts.AthleteNotifier do
     ==============================
     """)
   end
+
+  def deliver_weekly_summary(athlete, _races, _total_distance) do
+    # TODO: Implement weekly summary email
+    {:ok, athlete}
+  end
 end

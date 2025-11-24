@@ -70,6 +70,29 @@ config :trail_chronicle, TrailChronicleWeb.Gettext,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+config :trail_chronicle, Oban,
+  repo: TrailChronicle.Repo,
+  plugins: [
+    # Keep jobs for 7 days
+    {Oban.Plugins.Pruner, max_age: 60 * 60 * 24 * 7},
+    {Oban.Plugins.Cron,
+     crontab: [
+       # Every Sunday at 9 AM
+       {"0 9 * * 0", TrailChronicle.Workers.WeeklySummaryWorker},
+       # Daily at 3 AM - backup
+       {"0 3 * * *", TrailChronicle.Workers.BackupWorker}
+     ]}
+  ],
+  queues: [
+    default: 10,
+    ai_analysis: 5,
+    strava_sync: 3,
+    exports: 2,
+    emails: 5
+  ]
+
+config :tesla, disable_deprecated_builder_warning: true
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"

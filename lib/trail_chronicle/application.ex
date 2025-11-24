@@ -12,6 +12,7 @@ defmodule TrailChronicle.Application do
       TrailChronicle.Repo,
       {DNSCluster, query: Application.get_env(:trail_chronicle, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: TrailChronicle.PubSub},
+      {Oban, Application.fetch_env!(:trail_chronicle, Oban)},
       # Start the Finch HTTP client for sending emails
       {Finch, name: TrailChronicle.Finch},
       # Start a worker by calling: TrailChronicle.Worker.start_link(arg)
