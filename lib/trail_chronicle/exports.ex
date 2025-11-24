@@ -84,33 +84,4 @@ defmodule TrailChronicle.Exports do
   def export_race_to_pdf(_race) do
     {:error, "PDF export is not available in this version. Use CSV or JSON instead."}
   end
-
-  defp generate_race_html(race) do
-    """
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <style>
-        body { font-family: Arial, sans-serif; padding: 40px; }
-        h1 { color: #1e293b; }
-        .info { margin: 20px 0; }
-        .label { font-weight: bold; color: #64748b; }
-      </style>
-    </head>
-    <body>
-      <h1>#{race.name}</h1>
-      <div class="info">
-        <p><span class="label">Date:</span> #{race.race_date}</p>
-        <p><span class="label">Distance:</span> #{race.distance_km} km</p>
-        <p><span class="label">Elevation:</span> #{race.elevation_gain_m || 0} m</p>
-        <p><span class="label">Time:</span> #{format_time(race.finish_time_seconds)}</p>
-        <p><span class="label">Location:</span> #{race.city}, #{race.country}</p>
-      </div>
-      <h2>Race Report</h2>
-      <p>#{race.race_report || "No report available."}</p>
-    </body>
-    </html>
-    """
-  end
 end

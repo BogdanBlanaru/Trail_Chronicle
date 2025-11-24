@@ -2,13 +2,13 @@ defmodule TrailChronicle.Integrations.StravaClient do
   @moduledoc """
   HTTP client for Strava API v3
   """
-
   use Tesla
 
   plug Tesla.Middleware.BaseUrl, "https://www.strava.com/api/v3"
   plug Tesla.Middleware.JSON
   plug Tesla.Middleware.Logger
 
+  # Retrieve from environment variables
   @client_id System.get_env("STRAVA_CLIENT_ID")
   @client_secret System.get_env("STRAVA_CLIENT_SECRET")
 
@@ -42,6 +42,8 @@ defmodule TrailChronicle.Integrations.StravaClient do
     })
   end
 
+  # --- ACTIVITIES ---
+
   def get_activities(access_token, opts \\ []) do
     page = Keyword.get(opts, :page, 1)
     per_page = Keyword.get(opts, :per_page, 30)
@@ -58,6 +60,14 @@ defmodule TrailChronicle.Integrations.StravaClient do
 
   def get_activity_details(access_token, activity_id) do
     get("/activities/#{activity_id}",
+      headers: [{"Authorization", "Bearer #{access_token}"}]
+    )
+  end
+
+  # --- NEW: Fetch detailed streams (Elevation!) ---
+  def get_activity_streams(access_token, activity_id) do
+    get("/activities/#{activity_id}/streams",
+      query: [keys: "latlng,altitude", key_by_type: true],
       headers: [{"Authorization", "Bearer #{access_token}"}]
     )
   end

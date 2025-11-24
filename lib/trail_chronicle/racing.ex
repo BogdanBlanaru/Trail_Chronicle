@@ -45,6 +45,14 @@ defmodule TrailChronicle.Racing do
     |> Repo.preload(:athlete)
   end
 
+  def get_race_by_name_and_date(%Athlete{id: athlete_id}, name, date) do
+    Race
+    |> where([r], r.athlete_id == ^athlete_id)
+    |> where([r], r.name == ^name)
+    |> where([r], r.race_date == ^date)
+    |> Repo.one()
+  end
+
   def create_race(%Athlete{id: athlete_id}, attrs \\ %{}) do
     attrs_with_athlete = Map.put(attrs, "athlete_id", athlete_id)
 

@@ -13,6 +13,7 @@ defmodule TrailChronicle.Racing.Shoe do
     field :current_distance_km, :decimal, default: Decimal.new("0.0")
     field :is_retired, :boolean, default: false
     field :purchased_at, :date
+    field :category, :string, default: "road"
 
     belongs_to :athlete, TrailChronicle.Accounts.Athlete
     has_many :races, TrailChronicle.Racing.Race
@@ -29,9 +30,11 @@ defmodule TrailChronicle.Racing.Shoe do
       :distance_limit_km,
       :is_retired,
       :purchased_at,
-      :athlete_id
+      :athlete_id,
+      :category
     ])
     |> validate_required([:brand, :model, :distance_limit_km, :athlete_id])
     |> validate_number(:distance_limit_km, greater_than: 0)
+    |> validate_inclusion(:category, ["trail", "road", "mixed"])
   end
 end
