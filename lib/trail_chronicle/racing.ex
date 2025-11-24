@@ -48,15 +48,41 @@ defmodule TrailChronicle.Racing do
   def create_race(%Athlete{id: athlete_id}, attrs \\ %{}) do
     attrs_with_athlete = Map.put(attrs, "athlete_id", athlete_id)
 
-    %Race{}
-    |> Race.changeset(attrs_with_athlete)
-    |> Repo.insert()
+    result =
+      %Race{}
+      |> Race.changeset(attrs_with_athlete)
+      |> Repo.insert()
+
+    case result do
+      {:ok, race} ->
+        if race.shoe_id, do: recalculate_shoe_mileage(race.shoe_id)
+        {:ok, race}
+
+      error ->
+        error
+    end
   end
 
   def update_race(%Race{} = race, attrs) do
-    race
-    |> Race.changeset(attrs)
-    |> Repo.update()
+    old_shoe_id = race.shoe_id
+
+    result =
+      race
+      |> Race.changeset(attrs)
+      |> Repo.update()
+
+    case result do
+      {:ok, updated_race} ->
+        if updated_race.shoe_id, do: recalculate_shoe_mileage(updated_race.shoe_id)
+
+        if old_shoe_id && old_shoe_id != updated_race.shoe_id,
+          do: recalculate_shoe_mileage(old_shoe_id)
+
+        {:ok, updated_race}
+
+      error ->
+        error
+    end
   end
 
   def complete_race(%Race{} = race, results) do
@@ -456,6 +482,12 @@ defmodule TrailChronicle.Racing do
     %Shoe{athlete_id: athlete_id}
     |> Shoe.changeset(attrs)
     |> Repo.insert()
+  end
+
+  def update_shoe(%Shoe{} = shoe, attrs) do
+    shoe
+    |> Shoe.changeset(attrs)
+    |> Repo.update()
   end
 
   def change_shoe(%Shoe{} = shoe, attrs \\ %{}) do

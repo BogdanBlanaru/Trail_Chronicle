@@ -9,17 +9,17 @@ defmodule TrailChronicleWeb.RaceLive.Form do
     athlete = socket.assigns.current_athlete
 
     if athlete do
-      active_shoes = Racing.list_active_shoes(athlete)
+      shoes = Racing.list_active_shoes(athlete)
 
-      # Create a list of tuples for the select input: [{"Hoka Speedgoat (50km)", id}, ...]
       shoe_options =
-        Enum.map(active_shoes, fn s ->
+        Enum.map(shoes, fn s ->
           {"#{s.brand} #{s.model} (#{Decimal.round(s.current_distance_km, 0)}km)", s.id}
         end)
 
       {:ok,
        socket
        |> assign(:athlete, athlete)
+       # Add to assigns
        |> assign(:shoe_options, shoe_options)
        |> apply_action(socket.assigns.live_action, params)}
     else

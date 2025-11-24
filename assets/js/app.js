@@ -271,6 +271,19 @@ Hooks.RaceMap = {
   }
 }
 
+Hooks.Confetti = {
+  mounted() {
+    // Only fire if the element has the data-fire attribute
+    if (this.el.dataset.fire === "true") {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+    }
+  }
+}
+
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
