@@ -54,11 +54,37 @@ defmodule TrailChronicleWeb.AthleteLoginLive do
     """
   end
 
-  def mount(_params, _session, socket) do
+  def mount(params, _session, socket) do
+    # Determine locale from params or current process default
+    locale = params["locale"] || Gettext.get_locale(TrailChronicleWeb.Gettext)
+    Gettext.put_locale(TrailChronicleWeb.Gettext, locale)
+
     email = Phoenix.Flash.get(socket.assigns.flash, :email)
     form = to_form(%{"email" => email}, as: "athlete")
 
-    {:ok, assign(socket, form: form, page_title: gettext("Log in")),
-     temporary_assigns: [form: form]}
+    {:ok,
+     assign(socket,
+       form: form,
+       page_title: gettext("Log in"),
+       # Assign locale so the layout can access @locale
+       locale: locale
+     ), temporary_assigns: [form: form]}
+  end
+
+  def handle_params(_params, url, socket) do
+    uri = URI.parse(url)
+    current_path = if uri.query, do: uri.path <> "?" <> uri.query, else: uri.path
+    {:noreply, assign(socket, :current_path, current_path)}
+  end
+
+  def handle_event("switch-locale", %{"locale" => locale}, socket) do
+    Gettext.put_locale(TrailChronicleWeb.Gettext, locale)
+
+    path = socket.assigns[:current_path] || ~p"/athletes/log_in"
+    uri = URI.parse(path)
+    query = URI.decode_query(uri.query || "") |> Map.put("locale", locale)
+    final_path = %{uri | query: URI.encode_query(query)} |> URI.to_string()
+
+    {:noreply, push_navigate(socket, to: final_path)}
   end
 end

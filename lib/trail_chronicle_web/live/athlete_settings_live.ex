@@ -98,7 +98,11 @@ defmodule TrailChronicleWeb.AthleteSettingsLive do
     """
   end
 
-  def mount(%{"token" => token}, _session, socket) do
+  def mount(%{"token" => token} = params, _session, socket) do
+    # Set locale primarily for any flash messages
+    locale = params["locale"] || Gettext.get_locale(TrailChronicleWeb.Gettext)
+    Gettext.put_locale(TrailChronicleWeb.Gettext, locale)
+
     socket =
       case Accounts.update_athlete_email(socket.assigns.current_athlete, token) do
         :ok ->
@@ -111,7 +115,10 @@ defmodule TrailChronicleWeb.AthleteSettingsLive do
     {:ok, push_navigate(socket, to: ~p"/athletes/settings")}
   end
 
-  def mount(_params, _session, socket) do
+  def mount(params, _session, socket) do
+    locale = params["locale"] || Gettext.get_locale(TrailChronicleWeb.Gettext)
+    Gettext.put_locale(TrailChronicleWeb.Gettext, locale)
+
     athlete = socket.assigns.current_athlete
     email_changeset = Accounts.change_athlete_email(athlete)
     password_changeset = Accounts.change_athlete_password(athlete)
@@ -125,8 +132,26 @@ defmodule TrailChronicleWeb.AthleteSettingsLive do
       |> assign(:password_form, to_form(password_changeset))
       |> assign(:trigger_submit, false)
       |> assign(:page_title, gettext("Settings"))
+      |> assign(:locale, locale)
 
     {:ok, socket}
+  end
+
+  def handle_params(_params, url, socket) do
+    uri = URI.parse(url)
+    current_path = if uri.query, do: uri.path <> "?" <> uri.query, else: uri.path
+    {:noreply, assign(socket, :current_path, current_path)}
+  end
+
+  def handle_event("switch-locale", %{"locale" => locale}, socket) do
+    Gettext.put_locale(TrailChronicleWeb.Gettext, locale)
+
+    path = socket.assigns[:current_path] || ~p"/athletes/settings"
+    uri = URI.parse(path)
+    query = URI.decode_query(uri.query || "") |> Map.put("locale", locale)
+    final_path = %{uri | query: URI.encode_query(query)} |> URI.to_string()
+
+    {:noreply, push_navigate(socket, to: final_path)}
   end
 
   def handle_event("validate_email", params, socket) do

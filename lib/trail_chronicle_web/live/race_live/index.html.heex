@@ -4,6 +4,7 @@
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         <div>
           <h1 class="text-3xl font-bold text-slate-900 tracking-tight">{gettext("My Races")}</h1>
+          
           <p class="text-slate-500 mt-1">
             {gettext("Your collection of finish lines.")}
             <span class="font-medium text-slate-900">
@@ -11,7 +12,7 @@
             </span>
           </p>
         </div>
-
+        
         <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
           <div class="relative group w-full sm:w-64">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -29,6 +30,7 @@
                 />
               </svg>
             </div>
+            
             <input
               type="text"
               name="query"
@@ -39,7 +41,7 @@
               class="block w-full pl-10 pr-3 py-2.5 border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-50 focus:bg-white transition-colors shadow-sm"
             />
           </div>
-
+          
           <.link
             navigate={~p"/races/new"}
             class="inline-flex items-center justify-center px-5 py-2.5 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 transition-all active:scale-95"
@@ -51,12 +53,11 @@
                 stroke-width="2"
                 d="M12 4v16m8-8H4"
               />
-            </svg>
-            {gettext("Log Race")}
+            </svg> {gettext("Log Race")}
           </.link>
         </div>
       </div>
-
+      
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-8">
         <div class="flex p-1 space-x-1 bg-slate-100 rounded-xl w-max">
           <button
@@ -81,7 +82,7 @@
             {gettext("Upcoming")}
           </button>
         </div>
-
+        
         <div class="relative">
           <form phx-change="sort">
             <select
@@ -91,12 +92,15 @@
               <option value="date_desc" selected={@sort_by == "date_desc"}>
                 {gettext("Newest First")}
               </option>
+              
               <option value="date_asc" selected={@sort_by == "date_asc"}>
                 {gettext("Oldest First")}
               </option>
+              
               <option value="distance_desc" selected={@sort_by == "distance_desc"}>
                 {gettext("Longest Distance")}
               </option>
+              
               <option value="distance_asc" selected={@sort_by == "distance_asc"}>
                 {gettext("Shortest Distance")}
               </option>
@@ -106,19 +110,22 @@
       </div>
     </div>
   </div>
-
+  
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
     <%= if Enum.empty?(@filtered_races) do %>
       <div class="flex flex-col items-center justify-center py-24 text-center">
         <div class="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mb-6 text-4xl grayscale opacity-50">
           🏔️
         </div>
+        
         <h3 class="text-xl font-bold text-slate-900">{gettext("No races found")}</h3>
+        
         <p class="text-slate-500 mt-2 max-w-md">
           {gettext(
             "We couldn't find any races matching your current filters. Try changing them or add a new race."
           )}
         </p>
+        
         <.link navigate={~p"/races/new"} class="mt-6 text-blue-600 font-semibold hover:underline">
           {gettext("Log a new race now")}
         </.link>
@@ -141,7 +148,7 @@
                   <span class="text-6xl opacity-20">🏔️</span>
                 </div>
               <% end %>
-
+              
               <div class="absolute top-4 left-4 flex gap-2">
                 <%= if race.status == "completed" do %>
                   <span class="bg-white/90 backdrop-blur text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wide shadow-sm">
@@ -154,19 +161,20 @@
                 <% end %>
               </div>
             </div>
-
+            
             <div class="p-6 flex-1 flex flex-col">
               <div class="flex justify-between items-start mb-2">
                 <div>
                   <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
                     {Calendar.strftime(race.race_date, "%b %d, %Y")}
                   </p>
+                  
                   <h3 class="text-xl font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors line-clamp-2">
                     {race.name}
                   </h3>
                 </div>
               </div>
-
+              
               <div class="flex items-center text-sm text-slate-500 mb-6">
                 <svg
                   class="w-4 h-4 mr-1.5 text-slate-400"
@@ -185,25 +193,29 @@
                     stroke-width="1.5"
                     d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                   />
-                </svg>
-                <span class="truncate">{race.city}</span>
+                </svg> <span class="truncate">{race.city}</span>
               </div>
-
+              
               <div class="mt-auto pt-4 border-t border-slate-100 grid grid-cols-3 gap-2 text-center">
                 <div>
                   <p class="text-[10px] uppercase font-bold text-slate-400">{gettext("Dist")}</p>
+                  
                   <p class="text-sm font-bold text-slate-900">
                     {race.distance_km}<span class="text-[10px] font-normal text-slate-500 ml-0.5">km</span>
                   </p>
                 </div>
+                
                 <div>
                   <p class="text-[10px] uppercase font-bold text-slate-400">{gettext("Elev")}</p>
+                  
                   <p class="text-sm font-bold text-slate-900">
                     {race.elevation_gain_m}<span class="text-[10px] font-normal text-slate-500 ml-0.5">m</span>
                   </p>
                 </div>
+                
                 <div>
                   <p class="text-[10px] uppercase font-bold text-slate-400">{gettext("Time")}</p>
+                  
                   <p class="text-sm font-bold text-slate-900">
                     {if race.finish_time_seconds,
                       do: format_time(race.finish_time_seconds),

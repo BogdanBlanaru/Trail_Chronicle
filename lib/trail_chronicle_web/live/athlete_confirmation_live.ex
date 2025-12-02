@@ -41,11 +41,22 @@ defmodule TrailChronicleWeb.AthleteConfirmationLive do
     """
   end
 
-  def mount(%{"token" => token}, _session, socket) do
+  def mount(params, _session, socket) do
+    # Locale logic
+    locale = params["locale"] || Gettext.get_locale(TrailChronicleWeb.Gettext)
+    Gettext.put_locale(TrailChronicleWeb.Gettext, locale)
+
+    token = params["token"]
     form = to_form(%{"token" => token}, as: "athlete")
 
-    {:ok, assign(socket, form: form, page_title: gettext("Confirm Account")),
+    {:ok, assign(socket, form: form, page_title: gettext("Confirm Account"), locale: locale),
      temporary_assigns: [form: nil]}
+  end
+
+  def handle_params(_params, url, socket) do
+    uri = URI.parse(url)
+    current_path = if uri.query, do: uri.path <> "?" <> uri.query, else: uri.path
+    {:noreply, assign(socket, :current_path, current_path)}
   end
 
   # Do not log in the athlete after confirmation to avoid a
@@ -74,5 +85,17 @@ defmodule TrailChronicleWeb.AthleteConfirmationLive do
              |> redirect(to: ~p"/")}
         end
     end
+  end
+
+  def handle_event("switch-locale", %{"locale" => locale}, socket) do
+    Gettext.put_locale(TrailChronicleWeb.Gettext, locale)
+
+    # Fallback, though usually has token
+    path = socket.assigns[:current_path] || ~p"/athletes/confirm"
+    uri = URI.parse(path)
+    query = URI.decode_query(uri.query || "") |> Map.put("locale", locale)
+    final_path = %{uri | query: URI.encode_query(query)} |> URI.to_string()
+
+    {:noreply, push_navigate(socket, to: final_path)}
   end
 end

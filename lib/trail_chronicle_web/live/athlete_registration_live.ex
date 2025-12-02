@@ -56,16 +56,28 @@ defmodule TrailChronicleWeb.AthleteRegistrationLive do
     """
   end
 
-  def mount(_params, _session, socket) do
+  def mount(params, _session, socket) do
+    # Determine locale from params or current process default
+    locale = params["locale"] || Gettext.get_locale(TrailChronicleWeb.Gettext)
+    Gettext.put_locale(TrailChronicleWeb.Gettext, locale)
+
     changeset = Accounts.change_athlete_registration(%Athlete{})
 
     socket =
       socket
       |> assign(trigger_submit: false, check_errors: false)
       |> assign(:page_title, gettext("Register"))
+      # Assign locale so the layout can access @locale
+      |> assign(:locale, locale)
       |> assign_form(changeset)
 
     {:ok, socket, temporary_assigns: [form: nil]}
+  end
+
+  def handle_params(_params, url, socket) do
+    uri = URI.parse(url)
+    current_path = if uri.query, do: uri.path <> "?" <> uri.query, else: uri.path
+    {:noreply, assign(socket, :current_path, current_path)}
   end
 
   def handle_event("save", %{"athlete" => athlete_params}, socket) do
@@ -88,6 +100,17 @@ defmodule TrailChronicleWeb.AthleteRegistrationLive do
   def handle_event("validate", %{"athlete" => athlete_params}, socket) do
     changeset = Accounts.change_athlete_registration(%Athlete{}, athlete_params)
     {:noreply, assign_form(socket, Map.put(changeset, :action, :validate))}
+  end
+
+  def handle_event("switch-locale", %{"locale" => locale}, socket) do
+    Gettext.put_locale(TrailChronicleWeb.Gettext, locale)
+
+    path = socket.assigns[:current_path] || ~p"/athletes/register"
+    uri = URI.parse(path)
+    query = URI.decode_query(uri.query || "") |> Map.put("locale", locale)
+    final_path = %{uri | query: URI.encode_query(query)} |> URI.to_string()
+
+    {:noreply, push_navigate(socket, to: final_path)}
   end
 
   defp assign_form(socket, %Ecto.Changeset{} = changeset) do

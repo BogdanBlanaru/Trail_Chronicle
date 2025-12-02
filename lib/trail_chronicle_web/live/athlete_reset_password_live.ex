@@ -57,6 +57,9 @@ defmodule TrailChronicleWeb.AthleteResetPasswordLive do
   end
 
   def mount(params, _session, socket) do
+    locale = params["locale"] || Gettext.get_locale(TrailChronicleWeb.Gettext)
+    Gettext.put_locale(TrailChronicleWeb.Gettext, locale)
+
     socket = assign_athlete_and_token(socket, params)
 
     form_source =
@@ -68,7 +71,14 @@ defmodule TrailChronicleWeb.AthleteResetPasswordLive do
           %{}
       end
 
-    {:ok, assign_form(socket, form_source), temporary_assigns: [form: nil]}
+    {:ok, assign_form(socket, form_source) |> assign(locale: locale),
+     temporary_assigns: [form: nil]}
+  end
+
+  def handle_params(_params, url, socket) do
+    uri = URI.parse(url)
+    current_path = if uri.query, do: uri.path <> "?" <> uri.query, else: uri.path
+    {:noreply, assign(socket, :current_path, current_path)}
   end
 
   # Do not log in the athlete after reset password to avoid a
@@ -89,6 +99,17 @@ defmodule TrailChronicleWeb.AthleteResetPasswordLive do
   def handle_event("validate", %{"athlete" => athlete_params}, socket) do
     changeset = Accounts.change_athlete_password(socket.assigns.athlete, athlete_params)
     {:noreply, assign_form(socket, Map.put(changeset, :action, :validate))}
+  end
+
+  def handle_event("switch-locale", %{"locale" => locale}, socket) do
+    Gettext.put_locale(TrailChronicleWeb.Gettext, locale)
+
+    path = socket.assigns[:current_path] || ~p"/athletes/log_in"
+    uri = URI.parse(path)
+    query = URI.decode_query(uri.query || "") |> Map.put("locale", locale)
+    final_path = %{uri | query: URI.encode_query(query)} |> URI.to_string()
+
+    {:noreply, push_navigate(socket, to: final_path)}
   end
 
   defp assign_athlete_and_token(socket, %{"token" => token}) do
