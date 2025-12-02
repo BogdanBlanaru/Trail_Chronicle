@@ -18,6 +18,33 @@ defmodule TrailChronicle.Racing do
     |> Repo.all()
   end
 
+  # Updated to INCLUDE route_data and ai_insight as requested
+  def list_races_summary(%Athlete{id: athlete_id}) do
+    Race
+    |> where([r], r.athlete_id == ^athlete_id)
+    |> select([r], %Race{
+      id: r.id,
+      athlete_id: r.athlete_id,
+      name: r.name,
+      race_date: r.race_date,
+      race_type: r.race_type,
+      status: r.status,
+      country: r.country,
+      city: r.city,
+      distance_km: r.distance_km,
+      elevation_gain_m: r.elevation_gain_m,
+      finish_time_seconds: r.finish_time_seconds,
+      cover_photo_url: r.cover_photo_url,
+      # Requested fields added back:
+      route_data: r.route_data,
+      ai_insight: r.ai_insight,
+      inserted_at: r.inserted_at,
+      updated_at: r.updated_at
+    })
+    |> order_by([r], desc: r.race_date)
+    |> Repo.all()
+  end
+
   def list_upcoming_races(%Athlete{id: athlete_id}) do
     today = Date.utc_today()
 
@@ -29,10 +56,61 @@ defmodule TrailChronicle.Racing do
     |> Repo.all()
   end
 
+  def list_upcoming_races_summary(%Athlete{id: athlete_id}) do
+    today = Date.utc_today()
+
+    Race
+    |> where([r], r.athlete_id == ^athlete_id)
+    |> where([r], r.status == "upcoming")
+    |> where([r], r.race_date >= ^today)
+    |> select([r], %Race{
+      id: r.id,
+      name: r.name,
+      race_date: r.race_date,
+      race_type: r.race_type,
+      status: r.status,
+      country: r.country,
+      city: r.city,
+      distance_km: r.distance_km,
+      elevation_gain_m: r.elevation_gain_m,
+      finish_time_seconds: r.finish_time_seconds,
+      cover_photo_url: r.cover_photo_url,
+      # Requested fields added back:
+      route_data: r.route_data,
+      ai_insight: r.ai_insight
+    })
+    |> order_by([r], asc: r.race_date)
+    |> Repo.all()
+  end
+
   def list_completed_races(%Athlete{id: athlete_id}) do
     Race
     |> where([r], r.athlete_id == ^athlete_id)
     |> where([r], r.status == "completed")
+    |> order_by([r], desc: r.race_date)
+    |> Repo.all()
+  end
+
+  def list_completed_races_summary(%Athlete{id: athlete_id}) do
+    Race
+    |> where([r], r.athlete_id == ^athlete_id)
+    |> where([r], r.status == "completed")
+    |> select([r], %Race{
+      id: r.id,
+      name: r.name,
+      race_date: r.race_date,
+      race_type: r.race_type,
+      status: r.status,
+      country: r.country,
+      city: r.city,
+      distance_km: r.distance_km,
+      elevation_gain_m: r.elevation_gain_m,
+      finish_time_seconds: r.finish_time_seconds,
+      cover_photo_url: r.cover_photo_url,
+      # Requested fields added back:
+      route_data: r.route_data,
+      ai_insight: r.ai_insight
+    })
     |> order_by([r], desc: r.race_date)
     |> Repo.all()
   end
