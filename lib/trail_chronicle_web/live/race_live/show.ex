@@ -2,6 +2,7 @@ defmodule TrailChronicleWeb.RaceLive.Show do
   use TrailChronicleWeb, :live_view
 
   alias TrailChronicle.{Racing}
+  alias TrailChronicle.FileStore
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
@@ -35,8 +36,19 @@ defmodule TrailChronicleWeb.RaceLive.Show do
            |> assign(:pace, calculate_pace(race.distance_km, race.finish_time_seconds))
            |> assign(:current_path, "/races/#{id}")
            |> assign(:page_title, race.name)
-           |> allow_upload(:gpx, accept: ~w(.gpx), max_entries: 1)
-           |> allow_upload(:photos, accept: ~w(.jpg .jpeg .png), max_entries: 10)}
+           # FIX: Enable auto_upload: true to prevent timeouts on large files
+           |> allow_upload(:gpx,
+             accept: ~w(.gpx),
+             max_entries: 1,
+             max_file_size: 25_000_000,
+             auto_upload: true
+           )
+           |> allow_upload(:photos,
+             accept: ~w(.jpg .jpeg .png),
+             max_entries: 10,
+             max_file_size: 25_000_000,
+             auto_upload: true
+           )}
         else
           {:ok,
            socket
@@ -66,7 +78,7 @@ defmodule TrailChronicleWeb.RaceLive.Show do
     {:noreply, assign(socket, :map_lightbox, false)}
   end
 
-  # --- EXISTING HANDLERS (Unchanged) ---
+  # --- EXISTING HANDLERS ---
 
   @impl true
   def handle_event("validate", _params, socket), do: {:noreply, socket}
@@ -110,13 +122,10 @@ defmodule TrailChronicleWeb.RaceLive.Show do
   @impl true
   def handle_event("save_photos", _, socket) do
     race = socket.assigns.race
-    upload_dir = Path.join(["priv", "static", "uploads"])
-    File.mkdir_p!(upload_dir)
 
     consume_uploaded_entries(socket, :photos, fn %{path: path}, entry ->
-      dest = Path.join([upload_dir, "#{entry.uuid}.#{ext(entry)}"])
-      File.cp!(path, dest)
-      url = "/uploads/#{entry.uuid}.#{ext(entry)}"
+      filename = "#{entry.uuid}.#{ext(entry)}"
+      {:ok, url} = FileStore.upload_photo(path, filename)
       Racing.create_photo(%{race_id: race.id, image_path: url})
       {:ok, url}
     end)
@@ -137,6 +146,9 @@ defmodule TrailChronicleWeb.RaceLive.Show do
   @impl true
   def handle_event("delete_photo", %{"id" => id}, socket) do
     photo = Racing.get_photo!(id)
+    # Delete from R2/Disk
+    FileStore.delete_photo(photo.image_path)
+    # Delete from DB
     Racing.delete_photo(photo)
     {:noreply, assign(socket, :photos, Racing.list_race_photos(socket.assigns.race.id))}
   end
@@ -250,5 +262,950 @@ defmodule TrailChronicleWeb.RaceLive.Show do
       pace = t / Decimal.to_float(d)
       "#{div(trunc(pace), 60)}:#{pad(rem(trunc(pace), 60))}"
     end
+  end
+
+  # Error helpers for uploads
+  defp error_to_string(:too_large), do: gettext("File is too large (max 25MB).")
+  defp error_to_string(:too_many_files), do: gettext("You have selected too many files.")
+  defp error_to_string(:not_accepted), do: gettext("You have selected an unacceptable file type.")
+  defp error_to_string(_), do: gettext("Unknown error")
+
+  @impl true
+  def render(assigns) do
+    ~H"""
+    <div class="min-h-screen bg-slate-50" phx-window-keydown="keydown">
+      <div class="relative h-[60vh] min-h-[500px] w-full bg-slate-900 overflow-hidden">
+        <%= if @race.cover_photo_url do %>
+          <img
+            src={@race.cover_photo_url}
+            class="w-full h-full object-cover opacity-70"
+            alt="Race Cover"
+          />
+          <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent">
+          </div>
+        <% else %>
+          <div class="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900">
+            <div class="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
+            </div>
+          </div>
+        <% end %>
+
+        <div class="absolute top-6 left-0 w-full px-4 sm:px-6 lg:px-8 z-20 flex justify-between items-start">
+          <.link
+            navigate={~p"/races"}
+            class="inline-flex items-center px-4 py-2 rounded-full bg-black/20 backdrop-blur-md text-white hover:bg-black/40 transition border border-white/10 text-sm font-medium group"
+          >
+            <svg
+              class="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+            {gettext("Back to Races")}
+          </.link>
+          <div class="flex gap-2">
+            <.link
+              navigate={~p"/races/#{@race.id}/edit"}
+              class="p-2 rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition border border-white/10"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                />
+              </svg>
+            </.link>
+          </div>
+        </div>
+
+        <div class="absolute bottom-0 left-0 w-full px-4 sm:px-6 lg:px-8 pb-24 z-20">
+          <div class="max-w-7xl mx-auto">
+            <div class="flex items-center gap-3 mb-4 animate-fade-in-up">
+              <span class="px-3 py-1 rounded-md bg-white/20 backdrop-blur-md border border-white/10 text-white text-xs font-bold uppercase tracking-wider">
+                {if @race.race_type, do: String.replace(@race.race_type, "_", " "), else: "Race"}
+              </span>
+              <%= if @race.status == "completed" do %>
+                <span class="px-3 py-1 rounded-md bg-emerald-500/80 backdrop-blur-md text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+                  ✓ {gettext("Completed")}
+                </span>
+              <% end %>
+            </div>
+
+            <h1 class="text-5xl md:text-7xl font-extrabold text-white mb-4 tracking-tight leading-tight shadow-sm">
+              {@race.name}
+            </h1>
+
+            <div class="flex flex-wrap items-center text-slate-200 gap-6 text-lg font-medium">
+              <div class="flex items-center">
+                <svg
+                  class="w-5 h-5 mr-2 text-blue-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                {Calendar.strftime(@race.race_date, "%B %d, %Y")}
+              </div>
+
+              <div class="flex items-center">
+                <svg
+                  class="w-5 h-5 mr-2 text-blue-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                  /><path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+                {[city: @race.city, country: @race.country]
+                |> Enum.map(fn {_, v} -> v end)
+                |> Enum.reject(&is_nil/1)
+                |> Enum.join(", ")}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-30 pb-20">
+        <div class="relative overflow-hidden rounded-3xl bg-slate-900 p-1 shadow-2xl shadow-indigo-500/20 mb-8">
+          <div class="absolute -top-24 -right-24 w-64 h-64 bg-indigo-500 rounded-full blur-3xl opacity-20 animate-pulse">
+          </div>
+
+          <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-500 rounded-full blur-3xl opacity-20">
+          </div>
+
+          <div class="relative bg-slate-900/50 backdrop-blur-xl rounded-[20px] p-6 sm:p-8 text-white">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+              <div>
+                <h3 class="text-2xl font-bold flex items-center gap-2">
+                  <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">
+                    AI Race Strategist
+                  </span>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    BETA
+                  </span>
+                </h3>
+
+                <p class="text-slate-400 text-sm mt-1">
+                  {gettext("Personalized breakdown based on course telemetry and conditions.")}
+                </p>
+              </div>
+
+              <button
+                phx-click="generate_ai"
+                disabled={@ai_loading}
+                class="group relative inline-flex items-center justify-center px-6 py-2.5 text-sm font-bold text-white transition-all duration-200 bg-indigo-600 font-pj rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 disabled:opacity-50 disabled:cursor-wait"
+              >
+                <div class="absolute transition-all duration-200 rounded-full -inset-px bg-gradient-to-r from-cyan-400 to-indigo-600 group-hover:shadow-lg group-hover:shadow-cyan-500/50">
+                </div>
+
+                <div class="relative inline-flex items-center gap-2">
+                  <%= if @ai_loading do %>
+                    <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                      >
+                      </circle>
+
+                      <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      >
+                      </path>
+                    </svg>
+                    <span>Thinking...</span>
+                  <% else %>
+                    <span>
+                      ✨ {if @ai_insight,
+                        do: gettext("Update Analysis"),
+                        else: gettext("Generate Strategy")}
+                    </span>
+                  <% end %>
+                </div>
+              </button>
+            </div>
+
+            <%= if @ai_insight do %>
+              <div class="grid grid-cols-1 md:grid-cols-6 gap-4 animate-fade-in-up">
+                <div class="md:col-span-4 bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition-colors">
+                  <div class="flex items-center gap-2 mb-3 text-indigo-300">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13 10V3L4 14h7v7l9-11h-7z"
+                      />
+                    </svg>
+                    <h4 class="font-bold uppercase text-xs tracking-wider">
+                      {gettext("Pacing Strategy")}
+                    </h4>
+                  </div>
+
+                  <p class="text-slate-200 leading-relaxed">{@ai_insight["pacing"]}</p>
+                </div>
+
+                <div class="md:col-span-2 bg-gradient-to-br from-rose-500/20 to-purple-500/20 border border-rose-500/30 rounded-2xl p-5 flex flex-col items-center justify-center text-center">
+                  <h4 class="font-bold uppercase text-xs tracking-wider text-rose-300 mb-1">
+                    {gettext("Suffering Score")}
+                  </h4>
+
+                  <div class="text-5xl font-black text-white flex items-baseline gap-1">
+                    {@ai_insight["score"]}
+                    <span class="text-sm font-normal text-slate-400">/100</span>
+                  </div>
+                </div>
+
+                <div class="md:col-span-2 bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition-colors">
+                  <div class="flex items-center gap-2 mb-3 text-cyan-300">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"
+                      />
+                    </svg>
+                    <h4 class="font-bold uppercase text-xs tracking-wider">
+                      {gettext("Conditions")}
+                    </h4>
+                  </div>
+
+                  <p class="text-sm text-slate-300">{@ai_insight["weather_advice"]}</p>
+                </div>
+
+                <div class="md:col-span-2 bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition-colors">
+                  <div class="flex items-center gap-2 mb-3 text-emerald-300">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
+                      />
+                    </svg>
+                    <h4 class="font-bold uppercase text-xs tracking-wider">{gettext("Fueling")}</h4>
+                  </div>
+
+                  <p class="text-sm text-slate-300">{@ai_insight["nutrition"]}</p>
+                </div>
+
+                <div class="md:col-span-2 bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition-colors">
+                  <div class="flex items-center gap-2 mb-3 text-amber-300">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13 10V3L4 14h7v7l9-11h-7z"
+                      />
+                    </svg>
+                    <h4 class="font-bold uppercase text-xs tracking-wider">
+                      {gettext("Gear Check")}
+                    </h4>
+                  </div>
+
+                  <p class="text-sm text-slate-300">{@ai_insight["shoe_advice"]}</p>
+                </div>
+              </div>
+
+              <div class="mt-4 text-right">
+                <span class="text-[10px] text-slate-500 font-mono uppercase">
+                  AI Model v2.1 • {Calendar.strftime(@race.ai_generated_at, "%d %b %H:%M")}
+                </span>
+              </div>
+            <% else %>
+              <div class="flex flex-col items-center justify-center py-12 border-2 border-dashed border-slate-700 rounded-2xl bg-slate-800/50">
+                <div class="text-4xl mb-4">🧠</div>
+
+                <p class="text-slate-300 font-medium text-center px-4">
+                  {gettext("Click 'Generate' to run the prediction model on your race data.")}
+                </p>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div class="lg:col-span-2 space-y-8">
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-100 p-6 flex flex-wrap gap-8 justify-around items-center text-center">
+              <div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">
+                  {gettext("Distance")}
+                </p>
+
+                <p class="text-4xl font-black text-slate-900">
+                  {@race.distance_km}<span class="text-lg font-bold text-slate-400 ml-1">km</span>
+                </p>
+              </div>
+
+              <div class="w-px h-12 bg-slate-100"></div>
+
+              <div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">
+                  {gettext("Elevation")}
+                </p>
+
+                <p class="text-4xl font-black text-slate-900">
+                  {@race.elevation_gain_m}<span class="text-lg font-bold text-slate-400 ml-1">m</span>
+                </p>
+              </div>
+
+              <div class="w-px h-12 bg-slate-100"></div>
+
+              <div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">
+                  {gettext("Time")}
+                </p>
+
+                <p class="text-4xl font-black text-emerald-600 font-mono tracking-tight">
+                  {if @race.finish_time_seconds,
+                    do: format_time(@race.finish_time_seconds),
+                    else: "--:--"}
+                </p>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+              <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                <h3 class="font-bold text-slate-900 flex items-center gap-2">
+                  🗺️ {gettext("Route Map")}
+                </h3>
+
+                <%= if @race.has_gpx do %>
+                  <button
+                    phx-click="delete_gpx"
+                    data-confirm={gettext("Are you sure you want to remove this route?")}
+                    class="text-xs font-bold text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                  >
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                    {gettext("Remove Route")}
+                  </button>
+                <% else %>
+                  <form phx-submit="save_gpx" phx-change="validate" class="flex items-center gap-2">
+                    <label class="cursor-pointer bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-xs font-bold hover:bg-blue-100 transition">
+                      {gettext("Upload GPX")}
+                      <.live_file_input upload={@uploads.gpx} class="hidden" />
+                    </label>
+                    <%= if @uploads.gpx.entries != [] do %>
+                      <button
+                        type="submit"
+                        class="bg-green-500 text-white px-3 py-1 rounded-lg text-xs font-bold hover:bg-green-600 transition shadow-sm animate-pulse"
+                      >
+                        {gettext("Analyze")}
+                      </button>
+                    <% end %>
+
+                    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden group-[.phx-submit-loading]:flex items-center justify-center transition-all duration-300">
+                      <div class="bg-white p-5 rounded-2xl shadow-2xl flex flex-col items-center gap-3 transform scale-100 animate-bounce-in">
+                        <svg
+                          class="animate-spin h-10 w-10 text-blue-600"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            class="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            stroke-width="4"
+                          >
+                          </circle>
+
+                          <path
+                            class="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          >
+                          </path>
+                        </svg>
+                        <span class="text-slate-700 font-bold text-sm">
+                          {gettext("Analyzing Route...")}
+                        </span>
+                      </div>
+                    </div>
+                  </form>
+                <% end %>
+              </div>
+
+              <%= if @race.has_gpx do %>
+                <% dist_float = Decimal.to_float(@race.distance_km || Decimal.new(0))
+                elev = @race.elevation_gain_m || 0 %>
+                <div class="flex border-b border-slate-100 bg-white/50 backdrop-blur">
+                  <div class="flex-1 py-3 text-center border-r border-slate-100">
+                    <span class="block text-[10px] font-bold uppercase text-slate-400">
+                      {gettext("Avg Gradient")}
+                    </span>
+                    <span class="block text-sm font-bold text-slate-900">
+                      {if dist_float > 0,
+                        do: "#{Float.round(elev / (dist_float * 1000) * 100, 1)}%",
+                        else: "0%"}
+                    </span>
+                  </div>
+
+                  <div class="flex-1 py-3 text-center border-r border-slate-100">
+                    <span class="block text-[10px] font-bold uppercase text-slate-400">
+                      {gettext("Climb Ratio")}
+                    </span>
+                    <span class="block text-sm font-bold text-slate-900">
+                      {if dist_float > 0, do: "#{round(elev / dist_float)} m/km", else: "0 m/km"}
+                    </span>
+                  </div>
+
+                  <div class="flex-1 py-3 text-center">
+                    <span class="block text-[10px] font-bold uppercase text-slate-400">
+                      {gettext("Profile Type")}
+                    </span>
+                    <span class="block text-sm font-bold text-blue-600">
+                      <%= if dist_float > 0 do %>
+                        <%= cond do %>
+                          <% (elev / dist_float) < 10 -> %>
+                            Flat
+                          <% (elev / dist_float) < 25 -> %>
+                            Hilly
+                          <% (elev / dist_float) < 50 -> %>
+                            Mountain
+                          <% true -> %>
+                            Vertical
+                        <% end %>
+                      <% else %>
+                        -
+                      <% end %>
+                    </span>
+                  </div>
+                </div>
+              <% end %>
+
+              <div class="relative h-[400px] bg-slate-100 w-full group">
+                <%= if @race.route_data do %>
+                  <div
+                    id="race-map"
+                    phx-update="ignore"
+                    phx-hook="RaceMap"
+                    data-route={Jason.encode!(@race.route_data)}
+                    class="w-full h-full z-0"
+                  >
+                  </div>
+
+                  <button
+                    phx-click="open_map_lightbox"
+                    class="absolute top-4 right-4 bg-white text-slate-700 p-2 rounded-lg shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-50 z-[400]"
+                    title={gettext("Expand Map")}
+                  >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+                      />
+                    </svg>
+                  </button>
+                <% else %>
+                  <div class="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                    <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="1.5"
+                        d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0121 18.382V7.618a1 1 0 01-.553-.894L15 4m0 13V4m0 0L9 7"
+                      />
+                    </svg>
+                    <span>{gettext("No GPS route data available")}</span>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+              <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                <h3 class="font-bold text-slate-900 flex items-center gap-2">
+                  📸 {gettext("Memories")}
+                </h3>
+
+                <form
+                  phx-submit="save_photos"
+                  phx-change="validate"
+                  class="group relative flex items-center"
+                >
+                  <label class="cursor-pointer bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-800 transition shadow-md inline-flex items-center">
+                    <span>+ {gettext("Add Photos")}</span>
+                    <.live_file_input upload={@uploads.photos} class="hidden" />
+                  </label>
+
+                  <button
+                    type="submit"
+                    disabled={
+                      @uploads.photos.entries == [] or
+                        Enum.any?(@uploads.photos.entries, fn entry -> !entry.done? end)
+                    }
+                    class="ml-2 text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {if Enum.any?(@uploads.photos.entries, &(!&1.done?)),
+                      do: gettext("Uploading..."),
+                      else: gettext("Save")}
+                  </button>
+                </form>
+
+                <% uploading? = Enum.any?(@uploads.photos.entries, fn entry -> !entry.done? end) %>
+                <div class={[
+                  "fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] items-center justify-center transition-all duration-300",
+                  if(uploading?, do: "flex", else: "hidden group-[.phx-submit-loading]:flex")
+                ]}>
+                  <div class="bg-white p-5 rounded-2xl shadow-2xl flex flex-col items-center gap-3 transform scale-100 animate-bounce-in">
+                    <svg
+                      class="animate-spin h-10 w-10 text-blue-600"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                      >
+                      </circle>
+                      <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      >
+                      </path>
+                    </svg>
+                    <span class="text-slate-700 font-bold text-sm">
+                      {if uploading?,
+                        do: gettext("Uploading Photos..."),
+                        else: gettext("Saving Memories...")}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+    <!-- Upload Errors Display -->
+              <%= for err <- upload_errors(@uploads.photos) do %>
+                <div class="px-6 py-2 bg-red-50 text-red-600 text-xs font-bold border-b border-red-100">
+                  {error_to_string(err)}
+                </div>
+              <% end %>
+
+              <%= if @uploads.photos.entries != [] do %>
+                <div class="px-6 py-2 bg-slate-50 border-b border-slate-100">
+                  <%= for entry <- @uploads.photos.entries do %>
+                    <div class="mb-2">
+                      <div class="flex items-center gap-2 text-xs text-slate-500">
+                        <span class="truncate w-24">{entry.client_name}</span>
+                        <div class="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                          <div
+                            class="h-full bg-blue-500 transition-all duration-300"
+                            style={"width: #{entry.progress}%"}
+                          >
+                          </div>
+                        </div>
+                        <span class="w-8 text-right">{entry.progress}%</span>
+                      </div>
+                      <%= for err <- upload_errors(@uploads.photos, entry) do %>
+                        <p class="text-red-500 text-[10px] pl-2">{error_to_string(err)}</p>
+                      <% end %>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
+
+              <div class="p-6">
+                <%= if Enum.empty?(@photos) do %>
+                  <p class="text-center text-slate-400 py-8 italic">
+                    {gettext("No photos added yet. Drag and drop to upload!")}
+                  </p>
+                <% else %>
+                  <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <%= for photo <- @photos do %>
+                      <div class="relative aspect-square rounded-xl overflow-hidden group">
+                        <img
+                          src={"#{photo.image_path}?v=#{DateTime.to_unix(photo.updated_at)}"}
+                          class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 cursor-pointer"
+                          phx-click="open_lightbox"
+                          phx-value-id={photo.id}
+                        />
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-start justify-between p-2 pointer-events-none">
+                          <button
+                            phx-click="set_cover"
+                            phx-value-id={photo.id}
+                            class="text-white hover:text-amber-400 bg-black/50 rounded-full p-1.5 backdrop-blur-sm transition pointer-events-auto"
+                            title={gettext("Set as Cover Photo")}
+                          >
+                            <svg
+                              class="w-4 h-4"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                          </button>
+                          <button
+                            phx-click="delete_photo"
+                            phx-value-id={photo.id}
+                            data-confirm={gettext("Delete this photo?")}
+                            class="text-white hover:text-red-500 bg-black/50 rounded-full p-1.5 backdrop-blur-sm transition pointer-events-auto"
+                            title={gettext("Delete")}
+                          >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+              <h3 class="font-bold text-2xl text-slate-900 mb-6 flex items-center gap-2">
+                <span>📝</span> {gettext("Race Report")}
+              </h3>
+
+              <%= if @race.race_report do %>
+                <div class="prose prose-lg prose-slate max-w-none text-slate-600 leading-relaxed">
+                  <p class="whitespace-pre-line">{@race.race_report}</p>
+                </div>
+              <% else %>
+                <div class="flex flex-col items-center justify-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                  <p class="text-slate-400 font-medium italic">
+                    {gettext("No story written for this adventure yet.")}
+                  </p>
+
+                  <.link
+                    navigate={~p"/races/#{@race.id}/edit"}
+                    class="mt-3 text-sm font-bold text-blue-600 hover:text-blue-700 hover:underline"
+                  >
+                    {gettext("Add your race report")}
+                  </.link>
+                </div>
+              <% end %>
+
+              <%= if @race.highlights || @race.difficulties do %>
+                <div class="grid grid-cols-1 md:grid-cols-2 border-t border-slate-100 mt-8 pt-8">
+                  <div class="p-4 bg-amber-50 rounded-xl mr-0 md:mr-4 mb-4 md:mb-0">
+                    <h4 class="font-bold text-amber-900 mb-2 text-sm uppercase tracking-wider">
+                      <span class="w-2 h-2 rounded-full bg-amber-500 mr-2 inline-block"></span> {gettext(
+                        "Highlights"
+                      )}
+                    </h4>
+
+                    <p class="text-slate-700 italic text-sm">{@race.highlights}</p>
+                  </div>
+
+                  <div class="p-4 bg-rose-50 rounded-xl">
+                    <h4 class="font-bold text-rose-900 mb-2 text-sm uppercase tracking-wider">
+                      <span class="w-2 h-2 rounded-full bg-rose-500 mr-2 inline-block"></span> {gettext(
+                        "The Struggle"
+                      )}
+                    </h4>
+
+                    <p class="text-slate-700 italic text-sm">{@race.difficulties}</p>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+
+          <div class="space-y-6">
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+              <h3 class="font-bold text-lg text-slate-900 mb-6">{gettext("Performance Analysis")}</h3>
+
+              <div class="space-y-6">
+                <div>
+                  <div class="flex justify-between mb-1">
+                    <span class="text-sm text-slate-500 font-medium">{gettext("Average Pace")}</span>
+                    <span class="text-sm font-bold text-slate-900">
+                      {if @pace, do: @pace, else: "-"} /km
+                    </span>
+                  </div>
+
+                  <div class="w-full bg-slate-100 rounded-full h-2">
+                    <div class="bg-blue-500 h-2 rounded-full" style="width: 60%"></div>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 pt-2">
+                  <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <p class="text-xs text-slate-400 font-bold uppercase">{gettext("Overall")}</p>
+
+                    <p class="text-xl font-bold text-slate-900 mt-1">
+                      {if @race.overall_position, do: "##{@race.overall_position}", else: "-"}
+                    </p>
+
+                    <p class="text-xs text-slate-400 mt-1">
+                      {if @race.total_participants, do: "of #{@race.total_participants}", else: ""}
+                    </p>
+                  </div>
+
+                  <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <p class="text-xs text-slate-400 font-bold uppercase">{gettext("Category")}</p>
+
+                    <p class="text-xl font-bold text-slate-900 mt-1">
+                      {if @race.category_position, do: "##{@race.category_position}", else: "-"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+              <h3 class="font-bold text-lg text-slate-900 mb-6">{gettext("Conditions")}</h3>
+
+              <div class="space-y-4">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-50">
+                  <span class="text-slate-500 text-sm">{gettext("Difficulty")}</span>
+                  <div class="flex gap-0.5">
+                    <%= if @race.terrain_difficulty do %>
+                      <%= for _ <- 1..@race.terrain_difficulty do %>
+                        <span class="w-2 h-4 bg-amber-400 rounded-sm"></span>
+                      <% end %>
+
+                      <%= for _ <- @race.terrain_difficulty..4//1 do %>
+                        <span class="w-2 h-4 bg-slate-200 rounded-sm"></span>
+                      <% end %>
+                    <% else %>
+                      <span class="text-slate-300">-</span>
+                    <% end %>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-500 text-sm">{gettext("Surface")}</span>
+                  <span class="font-semibold text-slate-900 text-sm">
+                    {if @race.surface_type, do: String.capitalize(@race.surface_type), else: "-"}
+                  </span>
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-500 text-sm">{gettext("Weather")}</span>
+                  <span class="font-semibold text-slate-900 text-sm">
+                    {if @race.weather_conditions, do: @race.weather_conditions, else: "-"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <%= if @race.official_website do %>
+              <a
+                href={@race.official_website}
+                target="_blank"
+                class="block w-full py-4 bg-slate-900 text-white text-center rounded-xl font-bold hover:bg-slate-800 transition shadow-lg shadow-slate-900/20"
+              >
+                {gettext("Official Website")} &rarr;
+              </a>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <%= if @selected_photo do %>
+        <div
+          class="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-sm animate-fade-in"
+          role="dialog"
+          aria-modal="true"
+        >
+          <button
+            phx-click="close_lightbox"
+            class="absolute top-6 right-6 text-white/70 hover:text-white p-2 rounded-full bg-white/10 hover:bg-white/20 transition z-50"
+          >
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+          <div class="relative max-w-7xl w-full h-full p-4 md:p-10 flex items-center justify-center">
+            <img
+              src={"#{@selected_photo.image_path}?v=#{DateTime.to_unix(@selected_photo.updated_at)}"}
+              class="max-h-[85vh] max-w-full rounded-lg shadow-2xl object-contain animate-scale-in"
+            />
+          </div>
+
+          <%= if length(@photos) > 1 do %>
+            <button
+              phx-click="prev_photo"
+              class="absolute left-4 md:left-8 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white p-4 rounded-full hover:bg-white/10 transition"
+            >
+              <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+            <button
+              phx-click="next_photo"
+              class="absolute right-4 md:right-8 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white p-4 rounded-full hover:bg-white/10 transition"
+            >
+              <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          <% end %>
+
+          <div class="absolute bottom-6 left-0 w-full text-center">
+            <p class="text-white/80 text-sm font-medium tracking-wider">
+              {Enum.find_index(@photos, &(&1.id == @selected_photo.id)) + 1} / {length(@photos)}
+            </p>
+          </div>
+        </div>
+      <% end %>
+
+      <%= if @map_lightbox do %>
+        <div class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/95 backdrop-blur-md animate-fade-in p-4 md:p-8">
+          <button
+            phx-click="close_map_lightbox"
+            class="absolute top-4 right-4 text-white/70 hover:text-white p-2 rounded-full bg-white/10 hover:bg-white/20 transition z-[110]"
+          >
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+          <div class="w-full h-full max-w-7xl flex flex-col bg-white rounded-2xl overflow-hidden shadow-2xl">
+            <div class="bg-slate-900 px-6 py-4 flex items-center justify-between shrink-0">
+              <div>
+                <h2 class="text-white text-xl font-bold flex items-center gap-3">
+                  {@race.name}
+                  <span class="text-xs font-normal bg-blue-600/20 border border-blue-500/30 px-2 py-0.5 rounded-md text-blue-100">
+                    {if @race.race_type, do: String.capitalize(@race.race_type), else: "Race"}
+                  </span>
+                </h2>
+
+                <div class="text-slate-400 text-xs mt-1 flex gap-3">
+                  <span>📏 {@race.distance_km}km</span> <span>⛰️ {@race.elevation_gain_m}m+</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+              <div class="flex-grow relative h-[60%] md:h-full md:w-[70%]">
+                <div
+                  id="race-map-expanded"
+                  phx-update="ignore"
+                  phx-hook="RaceMap"
+                  data-route={Jason.encode!(@race.route_data)}
+                  data-expanded="true"
+                  class="absolute inset-0 w-full h-full z-0"
+                >
+                </div>
+              </div>
+
+              <div class="h-[40%] md:h-full md:w-[30%] bg-white border-t md:border-t-0 md:border-l border-slate-200 flex flex-col z-10">
+                <div class="p-4 border-b border-slate-100 bg-slate-50/50">
+                  <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">
+                    Elevation Profile
+                  </h3>
+                </div>
+
+                <div class="flex-1 p-4 relative min-h-[200px]">
+                  <canvas id="elevation-chart"></canvas>
+                </div>
+
+                <div class="p-6 bg-slate-50 border-t border-slate-100 grid grid-cols-2 gap-4">
+                  <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Max Elevation</p>
+
+                    <p class="text-lg font-bold text-slate-900">
+                      <% # FIX: Handle both 2D and 3D coordinates safely to prevent crashing
+                      coords = @race.route_data["coordinates"]
+
+                      max_ele =
+                        if coords do
+                          Enum.reduce(coords, 0, fn
+                            [_, _, e], acc -> max(e, acc)
+                            # Handle 2D coordinates (0 ele)
+                            _, acc -> acc
+                          end)
+                        else
+                          0
+                        end %> {max_ele}m
+                    </p>
+                  </div>
+
+                  <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Avg Gradient</p>
+
+                    <p class="text-lg font-bold text-slate-900">
+                      <% dist = Decimal.to_float(@race.distance_km || Decimal.new(1)) %> {if dist > 0,
+                        do: Float.round((@race.elevation_gain_m || 0) / (dist * 1000) * 100, 1),
+                        else: 0}%
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+    """
   end
 end
