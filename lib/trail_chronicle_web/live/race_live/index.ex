@@ -287,6 +287,7 @@ defmodule TrailChronicleWeb.RaceLive.Index do
       socket
       |> assign(:athlete, athlete)
       |> assign(:raw_races, [])
+      |> assign(:filtered_races, [])
       # New loading state
       |> assign(:loading, true)
       |> assign(:filter, "all")
@@ -314,12 +315,21 @@ defmodule TrailChronicleWeb.RaceLive.Index do
 
   @impl true
   def handle_event("filter", %{"filter" => filter}, socket) do
+    # Async pattern for filtering to prevent UI freeze
+    # We set loading to true immediately, then fetch data in background
+    send(self(), {:load_filtered_races, filter})
+
+    {:noreply,
+     socket
+     |> assign(:filter, filter)
+     |> assign(:loading, true)}
+  end
+
+  # Handle the background fetch for filtering
+  @impl true
+  def handle_info({:load_filtered_races, filter}, socket) do
     athlete = socket.assigns.athlete
 
-    # We fetch data here too, but since the page is already loaded,
-    # a small delay is more acceptable than on initial load.
-    # However, to be perfectly consistent, we could make this async too,
-    # but typically filter clicks are expected to load.
     new_raw_races =
       case filter do
         "completed" -> Racing.list_completed_races_summary(athlete)
@@ -329,8 +339,8 @@ defmodule TrailChronicleWeb.RaceLive.Index do
 
     {:noreply,
      socket
-     |> assign(:filter, filter)
      |> assign(:raw_races, new_raw_races)
+     |> assign(:loading, false)
      |> assign_filtered_races()}
   end
 
