@@ -62,7 +62,7 @@ defmodule TrailChronicleWeb.RaceLive.Index do
                     d="M12 4v16m8-8H4"
                   />
                 </svg>
-                 {gettext("Log Race")}
+                {gettext("Log Race")}
               </.link>
             </div>
           </div>
@@ -225,7 +225,7 @@ defmodule TrailChronicleWeb.RaceLive.Index do
                           d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                         />
                       </svg>
-                       <span class="truncate">{race.city}</span>
+                      <span class="truncate">{race.city}</span>
                     </div>
 
                     <div class="mt-auto pt-4 border-t border-slate-100 grid grid-cols-3 gap-2 text-center">
