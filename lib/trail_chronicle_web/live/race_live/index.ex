@@ -313,18 +313,6 @@ defmodule TrailChronicleWeb.RaceLive.Index do
      |> assign_filtered_races()}
   end
 
-  @impl true
-  def handle_event("filter", %{"filter" => filter}, socket) do
-    # Async pattern for filtering to prevent UI freeze
-    # We set loading to true immediately, then fetch data in background
-    send(self(), {:load_filtered_races, filter})
-
-    {:noreply,
-     socket
-     |> assign(:filter, filter)
-     |> assign(:loading, true)}
-  end
-
   # Handle the background fetch for filtering
   @impl true
   def handle_info({:load_filtered_races, filter}, socket) do
@@ -342,6 +330,18 @@ defmodule TrailChronicleWeb.RaceLive.Index do
      |> assign(:raw_races, new_raw_races)
      |> assign(:loading, false)
      |> assign_filtered_races()}
+  end
+
+  @impl true
+  def handle_event("filter", %{"filter" => filter}, socket) do
+    # Async pattern for filtering to prevent UI freeze
+    # We set loading to true immediately, then fetch data in background
+    send(self(), {:load_filtered_races, filter})
+
+    {:noreply,
+     socket
+     |> assign(:filter, filter)
+     |> assign(:loading, true)}
   end
 
   # Handle Search - Robust pattern matching for different event payloads
